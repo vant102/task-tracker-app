@@ -358,12 +358,16 @@ input.glass-input:focus, textarea.glass-input:focus, select.glass-input:focus {
 }
 
 /* Nền ngày hôm nay (áp dụng cho Month, Week, Day view) */
+.rbc-day-bg.rbc-today,
+.rbc-time-column.rbc-today,
 .rbc-today {
     background-color: #4d6d9b !important;
 }
 
 /* Màu chữ của số ngày hôm nay */
-.rbc-date-cell.rbc-now .rbc-button-link {
+.rbc-date-cell.rbc-now .rbc-button-link,
+.rbc-date-cell.rbc-current .rbc-button-link,
+.rbc-date-cell.rbc-today .rbc-button-link {
     color: #e6b965 !important;
     font-weight: 800;
     background: transparent !important;
@@ -372,7 +376,8 @@ input.glass-input:focus, textarea.glass-input:focus, select.glass-input:focus {
 }
 
 /* Màu chữ của tiêu đề cột ngày hôm nay (trong Week/Day view) */
-.rbc-header.rbc-today {
+.rbc-header.rbc-today,
+.rbc-header.rbc-today .rbc-button-link {
     color: #e6b965 !important;
 }
 
