@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import moment from 'moment';
 import { deleteProject, useProjects, useTasks } from '../db/db';
 import { Folder, Hash, User, Edit2, Trash2, Calendar } from 'lucide-react';
 import ProjectFormModal from './ProjectFormModal';
@@ -6,7 +7,6 @@ import { architecturalProcess } from '../constants/architecturalProcess';
 
 export default function ProjectList({ onProjectSelect, selectedCategories = [], searchQuery = '' }) {
   const [editingProject, setEditingProject] = useState(null);
-  const [isAddingProject, setIsAddingProject] = useState(false);
   const projects = useProjects() || [];
   const tasks = useTasks() || [];
 
@@ -36,12 +36,6 @@ export default function ProjectList({ onProjectSelect, selectedCategories = [], 
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>Thư viện Dự án</h2>
-        <button 
-          onClick={() => setIsAddingProject(true)}
-          style={{ padding: '0.5rem 1rem', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: '8px', fontSize: '0.875rem', fontWeight: '500' }}
-        >
-          + Thêm Dự án mới
-        </button>
       </div>
       
       <div style={{ 
@@ -135,7 +129,7 @@ export default function ProjectList({ onProjectSelect, selectedCategories = [], 
               
               {project.end_date && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.75rem', marginTop: '0.5rem' }}>
-                  <Calendar size={12} /> Thời gian kết thúc: {new Date(project.end_date).toLocaleDateString('vi-VN')}
+                  <Calendar size={12} /> Thời gian kết thúc: {project.end_date ? moment(project.end_date).toDate().toLocaleDateString('vi-VN') : '-'}
                 </div>
               )}
             </div>
@@ -158,12 +152,6 @@ export default function ProjectList({ onProjectSelect, selectedCategories = [], 
         <ProjectFormModal 
           editProject={editingProject} 
           onClose={() => setEditingProject(null)} 
-        />
-      )}
-      
-      {isAddingProject && (
-        <ProjectFormModal 
-          onClose={() => setIsAddingProject(false)} 
         />
       )}
     </div>

@@ -22,6 +22,11 @@ export default function ProjectFormModal({ onClose, editProject = null }) {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 800 * 1024) {
+        alert("Kích thước ảnh quá lớn (vượt quá 800KB). Vui lòng chọn ảnh nhỏ hơn để lưu trên Cloud.");
+        e.target.value = '';
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setImageUrl(reader.result);
@@ -43,12 +48,17 @@ export default function ProjectFormModal({ onClose, editProject = null }) {
       color: 'var(--color-primary)'
     };
 
-    if (editProject) {
-      await updateProject(editProject.id, data);
-    } else {
-      await addProject(data);
+    try {
+      if (editProject) {
+        await updateProject(editProject.id, data);
+      } else {
+        await addProject(data);
+      }
+      onClose();
+    } catch (error) {
+      console.error("Lỗi khi lưu dự án:", error);
+      alert("Đã xảy ra lỗi khi lưu dự án: " + error.message);
     }
-    onClose();
   };
 
   return (

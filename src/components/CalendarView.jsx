@@ -15,12 +15,12 @@ export default function CalendarView() {
 
   // Convert tasks to BigCalendar events
   const events = tasks
-    .filter(task => task.deadline) // Only tasks with a deadline
+    .filter(task => task.deadline && moment(task.deadline).isValid()) // Only tasks with a valid deadline
     .map(task => ({
       id: task.id,
       title: task.title,
-      start: new Date(task.deadline),
-      end: new Date(task.deadline), // For simple tasks, start and end can be the same day
+      start: task.deadline ? moment(task.deadline).toDate() : new Date(),
+      end: task.deadline ? moment(task.deadline).toDate() : new Date(), // For simple tasks, start and end can be the same day
       allDay: true,
       priority: task.priority,
       status: task.status

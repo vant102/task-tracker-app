@@ -9,6 +9,7 @@ import CalendarView from './components/CalendarView';
 import PersonalProjectDetail from './components/PersonalProjectDetail';
 import EntertainmentDashboard from './components/EntertainmentDashboard';
 import LoginScreen from './components/LoginScreen';
+import ProjectFormModal from './components/ProjectFormModal';
 import { useAuth } from './contexts/AuthContext';
 // import { injectMockData } from './db/mockData'; // Disable mock data for Firebase
 
@@ -17,6 +18,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('calendar');
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isAddingProject, setIsAddingProject] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   if (!currentUser) {
@@ -34,7 +36,15 @@ function App() {
         {/* Header - Top Navigation */}
         <header className="header-main">
           <div className="title-group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <h1>Task Manager</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <h1>Task Manager</h1>
+              <button 
+                onClick={() => setIsAddingProject(true)}
+                style={{ padding: '0.5rem 1rem', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: '8px', fontSize: '0.875rem', fontWeight: '500' }}
+              >
+                + Thêm Dự án mới
+              </button>
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{currentUser.email}</span>
               <button onClick={logout} style={{ color: 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', padding: '0.5rem 1rem', borderRadius: '8px' }}>
@@ -117,6 +127,7 @@ function App() {
         {activeTab === 'calendar' && <CalendarView />}
 
         {isFormOpen && <TaskForm onClose={() => setIsFormOpen(false)} />}
+        {isAddingProject && <ProjectFormModal onClose={() => setIsAddingProject(false)} />}
       </main>
     </div>
     </>
