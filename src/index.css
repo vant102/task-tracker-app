@@ -440,12 +440,17 @@ input.glass-input:focus, textarea.glass-input:focus, select.glass-input:focus {
 }
 
 @media (max-width: 1300px) {
+    body {
+        overflow-y: auto !important;
+    }
+    
     .app-container {
         width: 100vw;
         min-height: 100vh;
         height: auto;
         margin: 0;
         border-radius: 0;
+        overflow: visible !important;
     }
     
     .glass-panel {
@@ -494,6 +499,7 @@ input.glass-input:focus, textarea.glass-input:focus, select.glass-input:focus {
     
     .main-content {
         padding: 1rem;
+        overflow: visible !important;
     }
     
     .responsive-grid-2, .responsive-grid-half {
