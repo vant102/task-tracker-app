@@ -65,7 +65,7 @@ export async function addProject(projectData) {
   return await addDoc(getCollection('projects'), {
     ...projectData,
     userId: getUserId(),
-    status: projectData.status || 'Active',
+    status: projectData.status || 'Đang thực hiện',
     createdAt: new Date().toISOString()
   });
 }

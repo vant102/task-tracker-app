@@ -153,7 +153,7 @@ export default function ProjectDetail({ projectId, onBack }) {
                 {/* Dòng 3 */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                   <label style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Trạng thái</label>
-                  <select defaultValue={project.status || 'Đang thực hiện'} onChange={(e) => handleUpdateProjectMeta('status', e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'var(--text-primary)', backgroundColor: 'var(--bg-main)', cursor: 'pointer' }}>
+                  <select defaultValue={(!project.status || project.status === 'Active') ? 'Đang thực hiện' : project.status} onChange={(e) => handleUpdateProjectMeta('status', e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'var(--text-primary)', backgroundColor: 'var(--bg-main)', cursor: 'pointer' }}>
                     <option value="Đang thực hiện">Đang thực hiện</option>
                     <option value="Tạm dừng">Tạm dừng</option>
                     <option value="Hoàn thiện">Hoàn thiện</option>
