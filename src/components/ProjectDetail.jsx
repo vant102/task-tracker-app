@@ -295,7 +295,7 @@ export default function ProjectDetail({ projectId, onBack }) {
                 value={newLog}
                 onChange={(e) => setNewLog(e.target.value)}
                 placeholder="Ghi lại các chốt biên bản họp..."
-                style={{ flex: 1, padding: '0.75rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'white' }}
+                style={{ flex: 1, padding: '0.75rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'white', backgroundColor: 'transparent' }}
               />
               <button type="submit" className="btn-gold" style={{ padding: '0 1rem' }}>
                 <Send size={18} />
