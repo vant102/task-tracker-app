@@ -90,7 +90,7 @@ export default function ArchitecturalProcess({ project }) {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 {renderStatusIcon(status)}
-                <h3 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: status === 'Hoàn thành' ? 'var(--text-secondary)' : 'var(--color-primary)' }}>
+                <h3 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   {stage.title}
                 </h3>
               </div>
