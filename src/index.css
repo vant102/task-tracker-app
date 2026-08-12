@@ -428,21 +428,14 @@ input.glass-input:focus, textarea.glass-input:focus, select.glass-input:focus {
     flex: 1;
 }
 
-.project-meta-grid-top {
+.project-meta-grid-new {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
 }
 
-.project-meta-grid-bottom {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 1rem;
-}
-
-.project-meta-grid-top input,
-.project-meta-grid-bottom input,
-.project-meta-grid-bottom select {
+.project-meta-grid-new input,
+.project-meta-grid-new select {
     min-width: 0;
 }
 
@@ -519,7 +512,7 @@ input.glass-input:focus, textarea.glass-input:focus, select.glass-input:focus {
         max-height: none !important;
     }
 
-    .project-meta-grid-top, .project-meta-grid-bottom {
+    .project-meta-grid-new {
         grid-template-columns: 1fr;
     }
     
