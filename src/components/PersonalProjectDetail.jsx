@@ -40,10 +40,14 @@ export default function PersonalProjectDetail({ projectId, project, onBack, hide
   const handleAddHabit = async () => {
     const title = window.prompt('Nhập tên thói quen mới:');
     if (!title) return;
+    const chiTiet = window.prompt('Chi tiết (VD: Đạp xe, Học bài...):') || '';
+    const quyTac = window.prompt('Quy tắc (VD: 30p mỗi ngày, 5h sáng...):') || '';
     await addTask({
       title,
       project_id: projectId,
       task_type: 'Habit',
+      chi_tiet: chiTiet,
+      quy_tac: quyTac,
       category_tag: 'Chưa phân loại',
       frequency: 'Hàng ngày',
       habit_logs: []
@@ -53,14 +57,19 @@ export default function PersonalProjectDetail({ projectId, project, onBack, hide
   const handleAddProject = async () => {
     const title = window.prompt('Nhập tên mục tiêu/dự án mới:');
     if (!title) return;
+    const targetStr = window.prompt('Tổng số bài/buổi:', '100');
+    const target = parseInt(targetStr, 10) || 100;
+    
     await addTask({
       title,
       project_id: projectId,
       task_type: 'Project',
-      status: 'Đang thực hiện',
-      target: 100,
-      current_progress: 0,
-      unit: '%'
+      status: 'Chuẩn bị',
+      target: target,
+      lessons_log: [],
+      start_date: '',
+      end_date: '',
+      chi_tiet: ''
     });
   };
 
@@ -68,25 +77,17 @@ export default function PersonalProjectDetail({ projectId, project, onBack, hide
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%', padding: '0 1rem' }}>
       
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
-        {!hideBackBtn && (
-          <button onClick={onBack} style={{ padding: '0.5rem', backgroundColor: 'var(--bg-main)', borderRadius: 'var(--radius-sm)' }}>
-            <ArrowLeft size={20} />
-          </button>
-        )}
-        <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{project.name}</h2>
-          <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Danh mục: {project.category}</span>
-        </div>
+      <div style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>Phát triển bản thân</h2>
       </div>
 
-        <div className="responsive-grid-half">    
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', overflowY: 'auto' }}>    
         {/* Habit Tracker Section */}
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <Flame size={20} color="var(--color-warning)" />
-              <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>Habit Tracker (7 Ngày Qua)</h3>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>Mục tiêu lập lại (7 Ngày Qua)</h3>
             </div>
             <button className="btn-gold" onClick={handleAddHabit}>
               <Plus size={14} /> Thêm Thói quen
@@ -97,17 +98,21 @@ export default function PersonalProjectDetail({ projectId, project, onBack, hide
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
                 <tr style={{ backgroundColor: 'var(--bg-main)', color: 'var(--text-secondary)' }}>
-                  <th style={{ padding: '0.75rem', fontWeight: '500' }}>Tên Thói quen</th>
-                  {last7Days.map(date => {
+                  {/* Info columns */}
+                  <th style={{ padding: '0.75rem', fontWeight: '500', minWidth: '140px' }}>Tên Thói quen</th>
+                  <th style={{ padding: '0.75rem', fontWeight: '500', minWidth: '120px' }}>Chi tiết</th>
+                  <th style={{ padding: '0.75rem', fontWeight: '500', minWidth: '130px', borderRight: '1px solid rgba(255,255,255,0.15)' }}>Quy tắc</th>
+                  {/* 7 day columns */}
+                  {last7Days.map((date, idx) => {
                     const d = new Date(date);
                     return (
-                      <th key={date} style={{ padding: '0.75rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: '500' }}>
+                      <th key={date} style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontSize: '0.85rem', fontWeight: '500', width: '70px' }}>
                         <div>{d.toLocaleDateString('vi-VN', { weekday: 'short' })}</div>
                         <div>{d.getDate()}/{d.getMonth() + 1}</div>
                       </th>
                     );
                   })}
-                  <th style={{ padding: '0.75rem', textAlign: 'center', fontWeight: '500' }}>Streak</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'center', fontWeight: '500', width: '60px' }}>Streak</th>
                 </tr>
               </thead>
               <tbody>
@@ -117,31 +122,53 @@ export default function PersonalProjectDetail({ projectId, project, onBack, hide
                   
                   return (
                     <tr key={habit.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td 
+                      {/* Info columns */}
+                      <td
                         onClick={() => setSelectedTask(habit)}
-                        style={{ padding: '1rem 0.75rem', fontWeight: '500', color: 'var(--text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                        style={{ padding: '0.75rem', fontWeight: '500', color: 'var(--text-primary)', cursor: 'pointer', minWidth: '140px' }}
                         title="Click để xem chi tiết"
                       >
-                        {habit.title} <Edit2 size={12} color="var(--text-secondary)" />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          {habit.title} <Edit2 size={11} color="var(--text-secondary)" />
+                        </div>
                       </td>
+                      <td style={{ padding: '0.75rem', minWidth: '120px' }}>
+                        <div
+                          onClick={() => setSelectedTask(habit)}
+                          style={{ width: '100%', color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'pre-wrap', cursor: 'pointer' }}
+                          title="Click để chỉnh sửa"
+                        >
+                          {habit.chi_tiet || <span style={{ opacity: 0.5 }}>Chưa có chi tiết...</span>}
+                        </div>
+                      </td>
+                      <td style={{ padding: '0.75rem', minWidth: '130px', borderRight: '1px solid rgba(255,255,255,0.15)' }}>
+                        <div
+                          onClick={() => setSelectedTask(habit)}
+                          style={{ width: '100%', color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'pre-wrap', cursor: 'pointer' }}
+                          title="Click để chỉnh sửa"
+                        >
+                          {habit.quy_tac || <span style={{ opacity: 0.5 }}>Chưa có quy tắc...</span>}
+                        </div>
+                      </td>
+                      {/* 7 day checkboxes */}
                       {last7Days.map(date => {
                         const isChecked = logs.includes(date);
                         return (
-                          <td key={date} style={{ padding: '0.75rem', textAlign: 'center' }}>
-                            <button 
+                          <td key={date} style={{ padding: '0.75rem 0.5rem', textAlign: 'center', width: '70px' }}>
+                            <button
                               onClick={() => handleHabitCheck(habit.id, date, logs)}
-                              style={{ 
-                                width: '24px', height: '24px', borderRadius: '4px',
+                              style={{
+                                width: '22px', height: '22px', borderRadius: '4px',
                                 backgroundColor: isChecked ? 'var(--color-success)' : 'var(--bg-main)',
                                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
                               }}
                             >
-                              {isChecked && <CheckCircle size={14} color="white" />}
+                              {isChecked && <CheckCircle size={13} color="white" />}
                             </button>
                           </td>
                         );
                       })}
-                      <td style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 'bold', color: 'var(--color-warning)' }}>
+                      <td style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 'bold', color: 'var(--color-warning)', width: '60px' }}>
                         {streak} 🔥
                       </td>
                     </tr>
@@ -171,61 +198,97 @@ export default function PersonalProjectDetail({ projectId, project, onBack, hide
             </button>
           </div>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {miniProjects.map(task => {
-              const current = task.current_progress || 0;
-              const target = task.target || 100;
-              const unit = task.unit || '%';
-              const percent = Math.min(100, Math.round((current / target) * 100));
-              const isDone = task.status === 'Hoàn thành';
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ backgroundColor: 'var(--bg-main)', color: 'var(--text-secondary)' }}>
+                  <th style={{ padding: '0.75rem', fontWeight: '500', minWidth: '140px', whiteSpace: 'nowrap' }}>Tên mục tiêu</th>
+                  <th style={{ padding: '0.75rem', fontWeight: '500', width: '50%', minWidth: '120px' }}>Chi tiết</th>
+                  <th style={{ padding: '0.75rem', fontWeight: '500', width: '50%', minWidth: '120px' }}>Quy tắc</th>
+                  <th style={{ padding: '0.75rem', fontWeight: '500', minWidth: '110px', whiteSpace: 'nowrap' }}>Trạng thái</th>
+                  <th style={{ padding: '0.75rem', fontWeight: '500', minWidth: '110px', whiteSpace: 'nowrap' }}>Kế hoạch</th>
+                  <th style={{ padding: '0.75rem', fontWeight: '500', textAlign: 'center', width: '70px', whiteSpace: 'nowrap' }}>Tới phần</th>
+                  <th style={{ padding: '0.75rem', fontWeight: '500', textAlign: 'center', width: '70px', whiteSpace: 'nowrap' }}>Tổng số</th>
+                  <th style={{ padding: '0.75rem', fontWeight: '500', textAlign: 'center', width: '70px', whiteSpace: 'nowrap' }}>Tiến độ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {miniProjects.map(task => {
+                  const completedCount = task.lessons_log && task.lessons_log.length > 0 
+                    ? Math.max(...task.lessons_log.map(l => l.lesson_number)) 
+                    : 0;
+                  const target = task.target || 1;
+                  const percent = Math.min(100, Math.round((completedCount / target) * 100));
+                  const isLocked = task.status === 'Chuẩn bị' || task.status === 'Đã hoàn thành' || task.status === 'Hoàn thành';
 
-              return (
-                <div key={task.id} style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <h4 
-                        onClick={() => setSelectedTask(task)} 
-                        style={{ fontWeight: 'bold', fontSize: '1.125rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: isDone ? 'line-through' : 'none', color: isDone ? 'var(--text-secondary)' : 'var(--text-primary)' }}
+                  return (
+                    <tr key={task.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td
+                        onClick={() => setSelectedTask(task)}
+                        style={{ padding: '0.75rem', fontWeight: '500', color: 'var(--text-primary)', cursor: 'pointer' }}
+                        title="Click để xem chi tiết"
                       >
-                        {task.title} <Edit2 size={14} color="var(--text-secondary)" />
-                      </h4>
-                      {task.category_tag && <span style={{ fontSize: '0.75rem', color: 'var(--color-primary)', backgroundColor: 'var(--bg-main)', padding: '0.25rem 0.5rem', borderRadius: 'var(--radius-sm)', marginTop: '0.5rem', display: 'inline-block' }}>{task.category_tag}</span>}
-                    </div>
-                    
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <input 
-                        type="number" 
-                        defaultValue={current}
-                        id={`progress-${task.id}`}
-                        style={{ width: '60px', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', outline: 'none', textAlign: 'center' }}
-                      />
-                      <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>/ {target} {unit}</span>
-                      <button 
-                        className="btn-gold"
-                        onClick={() => {
-                          const val = parseInt(document.getElementById(`progress-${task.id}`).value) || 0;
-                          handleUpdateProgress(task.id, val, target);
-                        }}
-                      >
-                        Cập nhật
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* Progress Bar */}
-                  <div style={{ width: '100%', height: '12px', backgroundColor: 'var(--bg-main)', borderRadius: '6px', overflow: 'hidden' }}>
-                    <div style={{ width: `${percent}%`, height: '100%', backgroundColor: isDone ? 'var(--color-success)' : 'var(--color-primary)', transition: 'width 0.3s ease' }}></div>
-                  </div>
-                </div>
-              );
-            })}
-            {miniProjects.length === 0 && (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                Chưa có mục tiêu nào.
-              </div>
-            )}
-          </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          {task.title} <Edit2 size={11} color="var(--text-secondary)" />
+                        </div>
+                      </td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <div
+                          onClick={() => setSelectedTask(task)}
+                          style={{ width: '100%', color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'pre-wrap', cursor: 'pointer' }}
+                          title="Click để chỉnh sửa"
+                        >
+                          {task.chi_tiet || <span style={{ opacity: 0.5 }}>Chưa có chi tiết...</span>}
+                        </div>
+                      </td>
+                      <td style={{ padding: '0.75rem', borderRight: '1px solid rgba(255,255,255,0.15)' }}>
+                        <div
+                          onClick={() => setSelectedTask(task)}
+                          style={{ width: '100%', color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'pre-wrap', cursor: 'pointer' }}
+                          title="Click để chỉnh sửa"
+                        >
+                          {task.quy_tac || <span style={{ opacity: 0.5 }}>Chưa có quy tắc...</span>}
+                        </div>
+                      </td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <div onClick={() => setSelectedTask(task)} style={{ cursor: 'pointer', color: 'var(--text-primary)', fontSize: '0.85rem' }} title="Click để chỉnh sửa">
+                          {task.status || 'Chuẩn bị'}
+                        </div>
+                      </td>
+                      <td style={{ padding: '0.75rem', backgroundColor: isLocked ? 'var(--bg-main)' : 'transparent' }}>
+                        <div onClick={() => setSelectedTask(task)} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.75rem', color: isLocked ? 'var(--text-secondary)' : 'var(--text-primary)' }} title="Click để chỉnh sửa">
+                          <span>{task.start_date ? new Date(task.start_date).toLocaleDateString('vi-VN') : '---'}</span>
+                          <span>{task.end_date ? new Date(task.end_date).toLocaleDateString('vi-VN') : '---'}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 'bold' }}>
+                        <span onClick={() => setSelectedTask(task)} style={{ cursor: 'pointer', color: 'var(--color-primary)' }} title="Nhấp để thêm nhật ký">
+                          {completedCount}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                        <div onClick={() => setSelectedTask(task)} style={{ cursor: 'pointer', fontSize: '0.85rem' }} title="Click để chỉnh sửa">
+                          {task.target || 1}
+                        </div>
+                      </td>
+                      <td style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 'bold', color: percent === 100 ? 'var(--color-success)' : 'var(--color-warning)' }}>
+                        {percent}%
+                      </td>
+                    </tr>
+                  );
+                })}
+                {miniProjects.length === 0 && (
+                  <tr>
+                    <td colSpan={7} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                      Chưa có mục tiêu nào.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
         </div>
+
+      </div>
 
       </div>
 

@@ -100,6 +100,7 @@ export default function ProjectDetail({ projectId, onBack }) {
             style={{ 
               padding: '0.75rem 1rem', 
               fontWeight: 'bold',
+              fontSize: '0.875rem',
               color: activeSubTab === 'process' ? 'var(--color-primary)' : 'var(--text-secondary)',
               borderBottom: activeSubTab === 'process' ? '2px solid var(--color-primary)' : '2px solid transparent',
               backgroundColor: 'transparent'
@@ -112,6 +113,7 @@ export default function ProjectDetail({ projectId, onBack }) {
             style={{ 
               padding: '0.75rem 1rem', 
               fontWeight: 'bold',
+              fontSize: '0.875rem',
               color: activeSubTab === 'tasks' ? 'var(--color-primary)' : 'var(--text-secondary)',
               borderBottom: activeSubTab === 'tasks' ? '2px solid var(--color-primary)' : '2px solid transparent',
               backgroundColor: 'transparent'
@@ -121,35 +123,51 @@ export default function ProjectDetail({ projectId, onBack }) {
           </button>
         </div>
 
-        <div className="responsive-grid-2" style={{ minHeight: 0 }}>
+        <div className="responsive-project-container">
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', overflowY: 'auto', paddingRight: '0.5rem' }}>
             
             {/* Project Metadata */}
-            <div className="card" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', fontSize: '0.875rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <label style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Mã ID</label>
-                <input type="text" defaultValue={project.project_id_code || ''} onBlur={(e) => handleUpdateProjectMeta('project_id_code', e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'var(--text-primary)', backgroundColor: 'var(--bg-main)' }} placeholder="VD: DA-2401" />
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', fontSize: '0.875rem' }}>
+              <div className="project-meta-grid-top">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <label style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Mã ID</label>
+                  <input type="text" defaultValue={project.project_id_code || ''} onBlur={(e) => handleUpdateProjectMeta('project_id_code', e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'var(--text-primary)', backgroundColor: 'var(--bg-main)' }} placeholder="VD: DA-2401" />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <label style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Chủ đầu tư</label>
+                  <input type="text" defaultValue={project.client || ''} onBlur={(e) => handleUpdateProjectMeta('client', e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'var(--text-primary)', backgroundColor: 'var(--bg-main)' }} placeholder="Tên khách hàng" />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <label style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Địa điểm công trình</label>
+                  <input type="text" defaultValue={project.location || ''} onBlur={(e) => handleUpdateProjectMeta('location', e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'var(--text-primary)', backgroundColor: 'var(--bg-main)' }} placeholder="Địa chỉ..." />
+                </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <label style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Chủ đầu tư</label>
-                <input type="text" defaultValue={project.client || ''} onBlur={(e) => handleUpdateProjectMeta('client', e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'var(--text-primary)', backgroundColor: 'var(--bg-main)' }} placeholder="Tên khách hàng" />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <label style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Địa điểm công trình</label>
-                <input type="text" defaultValue={project.location || ''} onBlur={(e) => handleUpdateProjectMeta('location', e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'var(--text-primary)', backgroundColor: 'var(--bg-main)' }} placeholder="Địa chỉ..." />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <label style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Thời gian bắt đầu</label>
-                <input type="date" defaultValue={project.start_date || ''} onChange={(e) => handleUpdateProjectMeta('start_date', e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'var(--text-primary)', backgroundColor: 'var(--bg-main)' }} />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <label style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Thời gian kết thúc</label>
-                <input type="date" defaultValue={project.end_date || ''} onChange={(e) => handleUpdateProjectMeta('end_date', e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'var(--text-primary)', backgroundColor: 'var(--bg-main)' }} />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <label style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Phong cách thiết kế</label>
-                <input type="text" defaultValue={project.style || ''} onBlur={(e) => handleUpdateProjectMeta('style', e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'var(--text-primary)', backgroundColor: 'var(--bg-main)' }} placeholder="VD: Modern Tropical" />
+              <div className="project-meta-grid-bottom">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <label style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Chốt giai đoạn</label>
+                  <input type="date" defaultValue={project.phase_deadline || ''} onChange={(e) => handleUpdateProjectMeta('phase_deadline', e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'var(--text-primary)', backgroundColor: 'var(--bg-main)' }} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <label style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Phong cách thiết kế</label>
+                  <input type="text" defaultValue={project.style || ''} onBlur={(e) => handleUpdateProjectMeta('style', e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'var(--text-primary)', backgroundColor: 'var(--bg-main)' }} placeholder="VD: Modern Tropical" />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <label style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Thời gian bắt đầu</label>
+                  <input type="date" defaultValue={project.start_date || ''} onChange={(e) => handleUpdateProjectMeta('start_date', e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'var(--text-primary)', backgroundColor: 'var(--bg-main)' }} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <label style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Thời gian kết thúc</label>
+                  <input type="date" defaultValue={project.end_date || ''} onChange={(e) => handleUpdateProjectMeta('end_date', e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'var(--text-primary)', backgroundColor: 'var(--bg-main)' }} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <label style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Trạng thái</label>
+                  <select defaultValue={project.status || 'Đang thực hiện'} onChange={(e) => handleUpdateProjectMeta('status', e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'var(--text-primary)', backgroundColor: 'var(--bg-main)', cursor: 'pointer' }}>
+                    <option value="Đang thực hiện">Đang thực hiện</option>
+                    <option value="Tạm dừng">Tạm dừng</option>
+                    <option value="Hoàn thiện">Hoàn thiện</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -158,11 +176,27 @@ export default function ProjectDetail({ projectId, onBack }) {
               <ArchitecturalProcess project={project} />
             ) : (
               <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>Bảng Kiểm soát Tiến độ (WBS)</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>Phần phát sinh</h3>
+                  <button onClick={async () => {
+                    const nextOrder = tasks.length + 1;
+                    const todayStr = new Date().toLocaleDateString('vi-VN');
+                    await import('../db/db').then(m => m.addTask({
+                      title: '',
+                      project_id: projectId,
+                      task_type: 'SubTask',
+                      status: `STT ${nextOrder} - ${todayStr}`,
+                      phase: 'Công việc phát sinh',
+                      deadline: null
+                    }));
+                  }} className="btn-gold" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}>
+                    + Thêm
+                  </button>
+                </div>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
                   <thead>
                     <tr style={{ backgroundColor: 'var(--bg-main)', color: 'var(--text-secondary)' }}>
-                      <th style={{ padding: '0.75rem', width: '50px', textAlign: 'center' }}>Status</th>
+                      <th style={{ padding: '0.75rem', width: '120px', textAlign: 'center' }}>STT & Ngày</th>
                       <th style={{ padding: '0.75rem', width: '250px' }}>Hạng mục công việc chi tiết</th>
                       <th style={{ padding: '0.75rem', width: '120px' }}>Thời hạn</th>
                       <th style={{ padding: '0.75rem' }}>Ghi chú / Đầu ra (Outputs)</th>
@@ -176,12 +210,16 @@ export default function ProjectDetail({ projectId, onBack }) {
                         </tr>
                         {groupedTasks[phase].map(task => (
                           <tr key={task.id} style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: task.status === 'Done' ? 'var(--bg-main)' : 'transparent', transition: 'background-color 0.2s ease' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-main)'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = task.status === 'Done' ? 'var(--bg-main)' : 'transparent'}>
-                            <td style={{ padding: '0.5rem', textAlign: 'center' }}>
-                              <button onClick={() => cycleStatus(task.id, task.status)} style={{ padding: '0.25rem', borderRadius: '4px', backgroundColor: 'transparent' }}>
-                                {renderStatusIcon(task.status)}
-                              </button>
+                            <td style={{ padding: '0.5rem', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '500' }}>
+                              {task.status?.startsWith('STT') ? task.status : (
+                                <button onClick={() => cycleStatus(task.id, task.status)} style={{ padding: '0.25rem', borderRadius: '4px', backgroundColor: 'transparent' }}>
+                                  {renderStatusIcon(task.status)}
+                                </button>
+                              )}
                             </td>
-                            <td style={{ padding: '0.5rem', fontWeight: '500', color: task.status === 'Done' ? 'var(--text-secondary)' : 'var(--text-primary)', textDecoration: task.status === 'Done' ? 'line-through' : 'none' }}>{task.title}</td>
+                            <td style={{ padding: '0.5rem', fontWeight: '500', color: task.status === 'Done' ? 'var(--text-secondary)' : 'var(--text-primary)', textDecoration: task.status === 'Done' ? 'line-through' : 'none' }}>
+                              <input type="text" defaultValue={task.title || ''} onBlur={(e) => updateTask(task.id, { title: e.target.value })} placeholder="Tên công việc..." style={{ width: '100%', backgroundColor: 'transparent', border: 'none', outline: 'none', color: 'inherit', fontWeight: 'inherit', textDecoration: 'inherit' }} />
+                            </td>
                             <td style={{ padding: '0.5rem' }}>
                               <input type="date" defaultValue={task.deadline ? new Date(task.deadline).toISOString().split('T')[0] : ''} onChange={(e) => handleUpdateDeadline(task.id, e.target.value)} style={{ padding: '0.25rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', backgroundColor: 'transparent', outline: 'none', color: 'var(--text-secondary)', fontSize: '0.75rem', width: '100px' }} />
                             </td>

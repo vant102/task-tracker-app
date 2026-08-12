@@ -46,17 +46,16 @@ export default function EntertainmentDashboard({ projectId, project }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Quản lý Giải trí & Cuộc hẹn</h2>
-          <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Theo dõi lịch trình cá nhân</span>
-        </div>
-        <button onClick={handleAddTask} className="btn-gold">
-          <Plus size={16} /> Thêm việc
-        </button>
+      <div style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>Quản lý Giải trí & Cuộc hẹn</h2>
       </div>
 
-      <div className="card" style={{ flex: 1, overflowY: 'auto', overflowX: 'auto' }}>
+      <div className="card" style={{ flex: 1, overflowY: 'auto', overflowX: 'auto', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '1rem', display: 'flex', justifyContent: 'flex-end', borderBottom: '1px solid var(--border-color)' }}>
+          <button onClick={handleAddTask} className="btn-gold">
+            <Plus size={16} /> Thêm việc
+          </button>
+        </div>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
           <thead>
             <tr style={{ backgroundColor: 'var(--bg-main)', color: 'var(--text-secondary)' }}>

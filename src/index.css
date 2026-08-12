@@ -34,6 +34,10 @@
     box-sizing: border-box;
 }
 
+html {
+    font-size: 150%; /* Tăng font và các kích thước dùng rem lên 1.5 lần */
+}
+
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg-color);
@@ -60,6 +64,7 @@ button {
 
 input, select, textarea {
     font-family: inherit;
+    font-size: inherit;
 }
 
 /* Background animated shapes */
@@ -415,6 +420,26 @@ input.glass-input:focus, textarea.glass-input:focus, select.glass-input:focus {
     flex: 1;
 }
 
+.responsive-project-container {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr;
+    gap: 2rem;
+    min-height: 0;
+    flex: 1;
+}
+
+.project-meta-grid-top {
+    display: grid;
+    grid-template-columns: 1fr 1fr 2fr;
+    gap: 1rem;
+}
+
+.project-meta-grid-bottom {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+}
+
 @media (max-width: 1024px) {
     .app-container {
         width: 100vw;
@@ -470,10 +495,19 @@ input.glass-input:focus, textarea.glass-input:focus, select.glass-input:focus {
         padding: 1rem;
     }
     
-    .responsive-grid-2, .responsive-grid-half {
+    .responsive-grid-2, .responsive-grid-half, .responsive-project-container {
         grid-template-columns: 1fr;
         overflow: visible;
-        gap: 1rem;
+    }
+
+    .project-meta-grid-top, .project-meta-grid-bottom {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .project-meta-grid-top, .project-meta-grid-bottom {
+        grid-template-columns: 1fr;
     }
     
     /* Fix modals on mobile */

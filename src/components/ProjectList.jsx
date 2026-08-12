@@ -96,52 +96,54 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
               )}
             </div>
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'white' }}>{project.name}</h3>
-                <span style={{ fontSize: '0.75rem', color: 'var(--color-primary)', backgroundColor: 'var(--bg-main)', padding: '0.25rem 0.5rem', borderRadius: 'var(--radius-sm)', width: 'fit-content' }}>
-                  {project.category}
-                </span>
-              </div>
-              <div style={{ display: 'flex', gap: '0.25rem' }}>
-                <button onClick={(e) => handleEditProject(e, project)} style={{ cursor: 'pointer', color: 'var(--text-secondary)', padding: '0.25rem', background: 'transparent', border: 'none' }} title="Sửa dự án">
-                  <Edit2 size={16} />
-                </button>
-                <button onClick={(e) => handleDeleteProject(e, project.id)} style={{ cursor: 'pointer', color: 'var(--text-secondary)', padding: '0.25rem', background: 'transparent', border: 'none' }} title="Xóa dự án">
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-
-            {(project.project_id_code || project.client) && (
-              <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-secondary)', fontSize: '0.75rem', marginTop: '0.5rem' }}>
-                {project.project_id_code && <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Hash size={12}/> {project.project_id_code}</span>}
-                {project.client && <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><User size={12}/> {project.client}</span>}
-              </div>
-            )}
-            
-            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-              Trạng thái: <strong>{project.status}</strong>
-            </div>
-
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-                <span>Tiến độ</span>
-                <span style={{ fontWeight: 'bold' }}>{progress}%</span>
-              </div>
-              <div style={{ width: '100%', backgroundColor: 'var(--bg-main)', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ width: `${progress}%`, height: '100%', backgroundColor: project.color, transition: 'width 0.3s ease' }}></div>
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', textAlign: 'center', flex: 1 }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {project.name}
+              </h3>
               
-              {project.end_date && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.75rem', marginTop: '0.5rem' }}>
-                  <Calendar size={12} /> Thời gian kết thúc: {project.end_date ? moment(project.end_date).toDate().toLocaleDateString('vi-VN') : '-'}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                {project.project_id_code && <span>{project.project_id_code}</span>}
+                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                  <button onClick={(e) => { e.stopPropagation(); handleEditProject(e, project); }} style={{ cursor: 'pointer', color: 'var(--text-secondary)', padding: '0.15rem', background: 'transparent', border: 'none' }} title="Sửa dự án">
+                    <Edit2 size={12} />
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); handleDeleteProject(e, project.id); }} style={{ cursor: 'pointer', color: 'var(--text-secondary)', padding: '0.15rem', background: 'transparent', border: 'none' }} title="Xóa dự án">
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Trạng thái:</span>
+                <span style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{project.status || 'Active'}</span>
+              </div>
+
+              {project.phase_deadline && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>Chốt giai đoạn</span>
+                  <span style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{new Date(project.phase_deadline).toLocaleDateString('vi-VN')}</span>
                 </div>
               )}
-            </div>
 
-            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: 'auto' }}>
-              {completedTasks} / {totalTasks} công việc hoàn thành
+              {project.end_date && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>Thời gian kết thúc</span>
+                  <span style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{new Date(project.end_date).toLocaleDateString('vi-VN')}</span>
+                </div>
+              )}
+
+              <div style={{ width: '100%', marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                  {completedTasks} / {totalTasks} hoàn thành
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                  <span>Tiến độ</span>
+                  <span style={{ fontWeight: 'bold' }}>{progress}%</span>
+                </div>
+                <div style={{ width: '100%', backgroundColor: 'var(--bg-main)', height: '6px', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ width: `${progress}%`, height: '100%', backgroundColor: project.color || 'var(--color-primary)', transition: 'width 0.3s ease' }}></div>
+                </div>
+              </div>
             </div>
           </div>
         );
