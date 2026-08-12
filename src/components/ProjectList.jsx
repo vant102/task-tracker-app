@@ -115,7 +115,7 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Trạng thái:</span>
-                <span style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{project.status || 'Active'}</span>
+                <span style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{project.status || 'Đang thực hiện'}</span>
               </div>
 
               {project.phase_deadline && (
