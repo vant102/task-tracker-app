@@ -1,20 +1,16 @@
 import React, { useState } from 'react';
-import { addTask, updateTask, deleteTask, useProjects, useProjectTasks } from '../db/db';
-import { Star, Trash2, Plus, Edit2 } from 'lucide-react';
+import { addTask, updateTask, deleteTask, useProjectTasks } from '../db/db';
+import { Star, Trash2, Plus } from 'lucide-react';
 
-export default function EntertainmentDashboard() {
-  const projects = useProjects();
-  const project = projects?.find(p => p.category === 'Giải trí');
-  const tasks = useProjectTasks(project?.id) || [];
-
-  if (!project) return <div>Đang tải dữ liệu Giải trí...</div>;
+export default function EntertainmentDashboard({ projectId, project }) {
+  const tasks = useProjectTasks(projectId) || [];
 
   const handleAddTask = async () => {
     const title = window.prompt('Nhập tên sự kiện/cuộc hẹn:');
     if (!title) return;
     await addTask({
       title,
-      project_id: project.id,
+      project_id: projectId,
       task_type: 'Entertainment',
       status: 'Sắp tới',
       priority_star: 3,

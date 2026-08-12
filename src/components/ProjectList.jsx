@@ -5,7 +5,7 @@ import { Folder, Hash, User, Edit2, Trash2, Calendar } from 'lucide-react';
 import ProjectFormModal from './ProjectFormModal';
 import { architecturalProcess } from '../constants/architecturalProcess';
 
-export default function ProjectList({ onProjectSelect, selectedCategories = [], searchQuery = '' }) {
+export default function ProjectList({ onProjectSelect, onAddProject, selectedCategories = [], searchQuery = '' }) {
   const [editingProject, setEditingProject] = useState(null);
   const projects = useProjects() || [];
   const tasks = useTasks() || [];
@@ -36,6 +36,12 @@ export default function ProjectList({ onProjectSelect, selectedCategories = [], 
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>Thư viện Dự án</h2>
+        <button
+          onClick={onAddProject}
+          style={{ padding: '0.4rem 1rem', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: '8px', fontSize: '0.85rem', fontWeight: '600' }}
+        >
+          + Dự án
+        </button>
       </div>
       
       <div style={{ 

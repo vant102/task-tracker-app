@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { LayoutDashboard, CheckSquare, Layers, Users, Calendar, AlertCircle, Menu, Settings, Search, Target, Coffee, LogOut } from 'lucide-react';
+import React, { useState } from 'react';
+import { LogOut, Search } from 'lucide-react';
 import './index.css';
-import TaskList from './components/TaskList';
 import TaskForm from './components/TaskForm';
 import ProjectList from './components/ProjectList';
 import ProjectDetail from './components/ProjectDetail';
@@ -11,7 +10,7 @@ import EntertainmentDashboard from './components/EntertainmentDashboard';
 import LoginScreen from './components/LoginScreen';
 import ProjectFormModal from './components/ProjectFormModal';
 import { useAuth } from './contexts/AuthContext';
-// import { injectMockData } from './db/mockData'; // Disable mock data for Firebase
+import { useProjects, addProject } from './db/db';
 
 function App() {
   const { currentUser, logout } = useAuth();
@@ -36,15 +35,7 @@ function App() {
         {/* Header - Top Navigation */}
         <header className="header-main">
           <div className="title-group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <h1>Task Manager</h1>
-              <button 
-                onClick={() => setIsAddingProject(true)}
-                style={{ padding: '0.5rem 1rem', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: '8px', fontSize: '0.875rem', fontWeight: '500' }}
-              >
-                + Thêm Dự án mới
-              </button>
-            </div>
+            <h1>Task Manager</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{currentUser.email}</span>
               <button onClick={logout} style={{ color: 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', padding: '0.5rem 1rem', borderRadius: '8px' }}>
@@ -54,29 +45,33 @@ function App() {
           </div>
           
           <div className="tabs">
-            <button 
+            <button
               className={`tab-btn ${activeTab === 'projects' || activeTab === 'projectDetail' ? 'active' : ''}`}
               onClick={() => { setActiveTab('projects'); setSelectedProjectId(null); }}
             >
-              Dự án thiết kế
+              <img src="/Work.svg" alt="" style={{ width: '20px', height: '20px', flexShrink: 0 }} />
+              Work
             </button>
-            <button 
+            <button
               className={`tab-btn ${activeTab === 'personal' ? 'active' : ''}`}
               onClick={() => setActiveTab('personal')}
             >
-              Phát triển bản thân
+              <img src="/Skills.svg" alt="" style={{ width: '20px', height: '20px', flexShrink: 0 }} />
+              Skills
             </button>
-            <button 
+            <button
               className={`tab-btn ${activeTab === 'entertainment' ? 'active' : ''}`}
               onClick={() => setActiveTab('entertainment')}
             >
-              Giải trí
+              <img src="/Relax.svg" alt="" style={{ width: '20px', height: '20px', flexShrink: 0 }} />
+              Relax
             </button>
-            <button 
+            <button
               className={`tab-btn ${activeTab === 'calendar' ? 'active' : ''}`}
               onClick={() => setActiveTab('calendar')}
             >
-              Lịch
+              <img src="/Plan.svg" alt="" style={{ width: '20px', height: '20px', flexShrink: 0 }} />
+              Plan
             </button>
           </div>
           
@@ -99,11 +94,11 @@ function App() {
         {/* Main Content */}
         <main className="main-content">
         
-        
         {activeTab === 'projects' && (
           <ProjectList 
             selectedCategories={['Dự án thiết kế']}
             searchQuery={searchQuery}
+            onAddProject={() => setIsAddingProject(true)}
             onProjectSelect={(id) => {
               setSelectedProjectId(id);
               setActiveTab('projectDetail');
@@ -120,10 +115,8 @@ function App() {
           />
         )}
 
-        {/* Cấu trúc mới đi thẳng vào trang */}
         {activeTab === 'personal' && <PersonalProjectDetailWrapper />}
-        {activeTab === 'entertainment' && <EntertainmentDashboard />}
-
+        {activeTab === 'entertainment' && <EntertainmentDashboardWrapper />}
         {activeTab === 'calendar' && <CalendarView />}
 
         {isFormOpen && <TaskForm onClose={() => setIsFormOpen(false)} />}
@@ -134,14 +127,34 @@ function App() {
   );
 }
 
-
-// Wrapper to dynamically pass the personal project ID
-import { useProjects } from './db/db';
+// Auto-init "Phát triển bản thân" project if not exists
 function PersonalProjectDetailWrapper() {
   const projects = useProjects();
   const project = projects?.find(p => p.category === 'Phát triển bản thân');
-  if (!project) return <div style={{ padding: '2rem', textAlign: 'center' }}>Không tìm thấy dự án Phát triển bản thân</div>;
+
+  React.useEffect(() => {
+    if (projects !== null && !project) {
+      addProject({ name: 'Phát triển bản thân', category: 'Phát triển bản thân', color: 'var(--color-primary)' });
+    }
+  }, [projects, project]);
+
+  if (!project) return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Đang khởi tạo...</div>;
   return <PersonalProjectDetail projectId={project.id} project={project} onBack={() => {}} hideBackBtn={true} />;
+}
+
+// Auto-init "Giải trí" project if not exists
+function EntertainmentDashboardWrapper() {
+  const projects = useProjects();
+  const project = projects?.find(p => p.category === 'Giải trí');
+
+  React.useEffect(() => {
+    if (projects !== null && !project) {
+      addProject({ name: 'Giải trí', category: 'Giải trí', color: 'var(--color-purple)' });
+    }
+  }, [projects, project]);
+
+  if (!project) return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Đang khởi tạo...</div>;
+  return <EntertainmentDashboard projectId={project.id} project={project} />;
 }
 
 export default App;
