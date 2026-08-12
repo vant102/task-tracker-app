@@ -33,8 +33,9 @@ export function useProjectTasks(projectId) {
 
 export function useProjectLogs(projectId) {
   const uid = auth.currentUser?.uid;
-  const q = (uid && projectId) ? query(getCollection('project_logs'), where('userId', '==', uid), where('project_id', '==', projectId), orderBy('date', 'desc')) : null;
-  return useFirestoreQuery(q, [uid, projectId]);
+  const q = (uid && projectId) ? query(getCollection('project_logs'), where('userId', '==', uid), where('project_id', '==', projectId)) : null;
+  const data = useFirestoreQuery(q, [uid, projectId]);
+  return data ? [...data].sort((a, b) => new Date(b.date) - new Date(a.date)) : null;
 }
 
 // --- CÁC HÀM GHI DỮ LIỆU ---
