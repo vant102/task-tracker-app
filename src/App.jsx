@@ -35,7 +35,7 @@ function App() {
         {/* Header - Top Navigation */}
         <header className="header-main">
           <div className="title-group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <h1>Task Manager</h1>
+            <h1>WorkLife</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{currentUser.email}</span>
               <button onClick={logout} style={{ color: 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', padding: '0.5rem 1rem', borderRadius: '8px' }}>

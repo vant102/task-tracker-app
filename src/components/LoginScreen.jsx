@@ -24,7 +24,7 @@ export default function LoginScreen() {
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10 }}>
         <div className="glass-panel" style={{ padding: '3rem', borderRadius: '24px', textAlign: 'center', maxWidth: '400px', width: '90%' }}>
           <div style={{ marginBottom: '2rem' }}>
-            <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>Second Brain</h1>
+            <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>WorkLife</h1>
             <p style={{ color: 'var(--text-secondary)' }}>Hệ thống quản lý công việc và phát triển cá nhân</p>
           </div>
           
