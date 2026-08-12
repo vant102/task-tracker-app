@@ -449,7 +449,8 @@ input.glass-input:focus, textarea.glass-input:focus, select.glass-input:focus {
 @media (max-width: 1300px) {
     .app-container {
         width: 100vw;
-        height: 100vh;
+        min-height: 100vh;
+        height: auto;
         margin: 0;
         border-radius: 0;
     }
@@ -502,9 +503,20 @@ input.glass-input:focus, textarea.glass-input:focus, select.glass-input:focus {
         padding: 1rem;
     }
     
-    .responsive-grid-2, .responsive-grid-half, .responsive-project-container {
+    .responsive-grid-2, .responsive-grid-half {
         grid-template-columns: 1fr;
         overflow: visible;
+    }
+
+    .responsive-project-container {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .responsive-project-container > div {
+        overflow-y: visible !important;
+        height: auto !important;
+        max-height: none !important;
     }
 
     .project-meta-grid-top, .project-meta-grid-bottom {
