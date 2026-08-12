@@ -13,6 +13,7 @@ export default function ProjectDetail({ projectId, onBack }) {
   const [newLog, setNewLog] = useState('');
   const [editingLogId, setEditingLogId] = useState(null);
   const [editLogContent, setEditLogContent] = useState('');
+  const [editLogDate, setEditLogDate] = useState('');
   
   // Tab state for Design Projects
   const [activeSubTab, setActiveSubTab] = useState('process'); // 'process' or 'tasks'
@@ -46,7 +47,11 @@ export default function ProjectDetail({ projectId, onBack }) {
 
   const handleEditLog = async (id) => {
     if (!editLogContent.trim()) return;
-    await updateProjectLog(id, { content: editLogContent });
+    const updateData = { content: editLogContent };
+    if (editLogDate) {
+      updateData.date = new Date(editLogDate).toISOString();
+    }
+    await updateProjectLog(id, updateData);
     setEditingLogId(null);
   };
 
@@ -257,7 +262,13 @@ export default function ProjectDetail({ projectId, onBack }) {
                       <span>{new Date(log.date).toLocaleString('vi-VN')}</span>
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button onClick={() => { setEditingLogId(log.id); setEditLogContent(log.content); }} style={{ color: 'var(--text-secondary)', background: 'transparent', padding: '0.25rem' }}>
+                      <button onClick={() => { 
+                        setEditingLogId(log.id); 
+                        setEditLogContent(log.content); 
+                        const d = new Date(log.date);
+                        const localISO = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0,16);
+                        setEditLogDate(localISO);
+                      }} style={{ color: 'var(--text-secondary)', background: 'transparent', padding: '0.25rem' }}>
                         <Edit2 size={12} />
                       </button>
                       <button onClick={() => handleDeleteLog(log.id)} style={{ color: 'var(--text-secondary)', background: 'transparent', padding: '0.25rem' }}>
@@ -267,6 +278,12 @@ export default function ProjectDetail({ projectId, onBack }) {
                   </div>
                   {editingLogId === log.id ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <input 
+                        type="datetime-local" 
+                        value={editLogDate} 
+                        onChange={(e) => setEditLogDate(e.target.value)}
+                        style={{ width: 'fit-content', padding: '0.25rem 0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'transparent', color: 'var(--text-secondary)', fontSize: '0.75rem', outline: 'none' }}
+                      />
                       <textarea 
                         value={editLogContent} 
                         onChange={(e) => setEditLogContent(e.target.value)}
