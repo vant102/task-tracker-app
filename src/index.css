@@ -430,14 +430,20 @@ input.glass-input:focus, textarea.glass-input:focus, select.glass-input:focus {
 
 .project-meta-grid-top {
     display: grid;
-    grid-template-columns: 1fr 1fr 2fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr);
     gap: 1rem;
 }
 
 .project-meta-grid-bottom {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 1rem;
+}
+
+.project-meta-grid-top input,
+.project-meta-grid-bottom input,
+.project-meta-grid-bottom select {
+    min-width: 0;
 }
 
 @media (max-width: 1024px) {
