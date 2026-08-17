@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Calendar, MapPin, User, Star, FileText, Activity } from 'lucide-react';
+import { X, Calendar, MapPin, User, Star, FileText, Activity, Save } from 'lucide-react';
 import { updateTask, addTask, useProjects } from '../db/db';
 
 export default function EventModal({ event, defaultDate, onClose, onSave }) {
@@ -34,44 +34,59 @@ export default function EventModal({ event, defaultDate, onClose, onSave }) {
 
   const handleSave = async () => {
     if (!title.trim()) {
-      alert('Vui lòng nhập tên sự kiện!');
+      alert('Vui lòng nhập tên sự kiện');
       return;
     }
-    
-    const taskData = {
-      title,
-      deadline: new Date(deadline).toISOString(),
-      partner,
-      location,
-      priority_star: priority,
-      notes,
-      status: status === 'Đã tham gia' ? 'Tham gia' : status, // normalize
-      task_type: 'Entertainment', // Always mark as Entertainment
-    };
 
-    if (isNew) {
-      taskData.status = taskData.status || 'Sắp tới';
-      taskData.project_id = relaxProject?.id || null;
-      await addTask(taskData);
-    } else {
-      await updateTask(event.id, taskData);
+    try {
+      const taskData = {
+        title,
+        deadline: new Date(deadline).toISOString(),
+        partner,
+        location,
+        priority_star: priority,
+        notes,
+        status: status === 'Đã tham gia' ? 'Tham gia' : status,
+        updatedAt: new Date().toISOString()
+      };
+
+      if (isNew) {
+        // If adding from Calendar or Relax tab directly
+        const targetProjectId = event?.project_id || relaxProject?.id || 'relax_default';
+        await addTask({
+          ...taskData,
+          project_id: targetProjectId,
+          completed: status === 'Tham gia' || status === 'Đã tham gia',
+          stage: 'default'
+        });
+      } else {
+        await updateTask(event.id, {
+          ...taskData,
+          completed: status === 'Tham gia' || status === 'Đã tham gia'
+        });
+      }
+
+      if (onSave) onSave();
+      onClose();
+    } catch (err) {
+      console.error('Error saving event:', err);
+      alert('Đã xảy ra lỗi khi lưu sự kiện: ' + err.message);
     }
-    
-    if (onSave) onSave();
-    onClose();
   };
 
   const renderStars = () => {
     return (
-      <div style={{ display: 'flex', gap: '4px', cursor: 'pointer' }}>
+      <div style={{ display: 'flex', gap: '6px', cursor: 'pointer' }}>
         {[1, 2, 3, 4, 5].map(star => (
           <Star 
             key={star} 
-            size={24} 
+            size={20} 
             fill={star <= priority ? 'var(--color-warning)' : 'transparent'} 
             color={star <= priority ? 'var(--color-warning)' : 'var(--text-secondary)'} 
             onClick={() => setPriority(star)}
-            style={{ transition: 'all 0.2s' }}
+            style={{ transition: 'transform 0.1s' }}
+            onMouseOver={e => e.currentTarget.style.transform = 'scale(1.2)'}
+            onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
           />
         ))}
       </div>
@@ -79,24 +94,26 @@ export default function EventModal({ event, defaultDate, onClose, onSave }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose} style={{
+    <div style={{
       position: 'fixed',
-      top: 0, left: 0, right: 0, bottom: 0,
+      inset: 0,
       backgroundColor: 'rgba(0, 0, 0, 0.75)',
       backdropFilter: 'blur(8px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 1000,
+      zIndex: 9999,
       padding: '1rem'
     }}>
-      <div className="modal-content glass-panel" onClick={e => e.stopPropagation()} style={{
+      <div className="modal-content glass-panel" style={{
         width: '100%',
-        maxWidth: '500px',
+        maxWidth: '520px',
         maxHeight: '90vh',
-        overflowY: 'auto',
         display: 'flex',
         flexDirection: 'column',
+        borderRadius: 'var(--radius-lg)',
+        border: '1px solid var(--glass-border)',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
         position: 'relative'
       }}>
         {/* Header */}
@@ -106,18 +123,18 @@ export default function EventModal({ event, defaultDate, onClose, onSave }) {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          position: 'sticky',
-          top: 0,
           backgroundColor: 'rgba(20, 25, 40, 0.95)',
           backdropFilter: 'blur(10px)',
           zIndex: 10,
-          borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0'
+          borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
+          flexShrink: 0
         }}>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', margin: 0, color: 'var(--color-primary)' }}>
             {isNew ? 'Thêm Cuộc Hẹn Mới' : 'Chi Tiết Cuộc Hẹn'}
           </h2>
           <button 
             onClick={onClose}
+            title="Đóng"
             style={{ 
               background: 'rgba(255,255,255,0.1)', 
               border: 'none', 
@@ -132,10 +149,18 @@ export default function EventModal({ event, defaultDate, onClose, onSave }) {
           </button>
         </div>
 
-        {/* Body */}
-        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        {/* Body - Scrollable Container */}
+        <div style={{ 
+          padding: '1.5rem', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: '1.25rem',
+          overflowY: 'auto',
+          flex: 1,
+          maxHeight: 'calc(90vh - 140px)'
+        }}>
           
-          {/* Tên sự kiện */}
+          {/* 1. Tên sự kiện */}
           <div className="event-modal-field">
             <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Tên sự kiện</label>
             <input 
@@ -145,11 +170,11 @@ export default function EventModal({ event, defaultDate, onClose, onSave }) {
               onChange={e => setTitle(e.target.value)}
               placeholder="Nhập tên sự kiện..."
               autoFocus
-              style={{ fontSize: '1.05rem', fontWeight: 'bold' }}
+              style={{ fontSize: '1.05rem', fontWeight: 'bold', width: '100%', boxSizing: 'border-box' }}
             />
           </div>
 
-          {/* Thời gian - Full width to accommodate iOS/Safari long localized date formats */}
+          {/* 2. Thời gian */}
           <div className="event-modal-field">
             <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <Calendar size={16} /> Thời gian
@@ -163,71 +188,71 @@ export default function EventModal({ event, defaultDate, onClose, onSave }) {
             />
           </div>
 
-          {/* Trạng thái & Đối tác */}
-          <div className="event-modal-grid">
-            <div className="event-modal-field">
-              <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Activity size={16} /> Trạng thái
-              </label>
-              <select 
-                className="glass-input"
-                value={status}
-                onChange={e => setStatus(e.target.value)}
-                style={{ 
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  color: (status === 'Tham gia' || status === 'Đã tham gia') ? 'var(--color-success)' : status === 'Lỡ hẹn' ? 'var(--color-danger)' : 'var(--color-warning)',
-                  fontWeight: 'bold'
-                }}
-              >
-                <option value="Sắp tới">Sắp tới</option>
-                <option value="Tham gia">Tham gia</option>
-                <option value="Lỡ hẹn">Lỡ hẹn</option>
-              </select>
-            </div>
+          {/* 3. Trạng thái */}
+          <div className="event-modal-field">
+            <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Activity size={16} /> Trạng thái
+            </label>
+            <select 
+              className="glass-input"
+              value={status}
+              onChange={e => setStatus(e.target.value)}
+              style={{ 
+                width: '100%',
+                boxSizing: 'border-box',
+                backgroundColor: '#0f172a',
+                color: (status === 'Tham gia' || status === 'Đã tham gia') ? 'var(--color-success)' : status === 'Lỡ hẹn' ? 'var(--color-danger)' : 'var(--color-warning)',
+                fontWeight: 'bold'
+              }}
+            >
+              <option value="Sắp tới" style={{ backgroundColor: '#0f172a', color: 'var(--color-warning)' }}>Sắp tới</option>
+              <option value="Tham gia" style={{ backgroundColor: '#0f172a', color: 'var(--color-success)' }}>Tham gia</option>
+              <option value="Lỡ hẹn" style={{ backgroundColor: '#0f172a', color: 'var(--color-danger)' }}>Lỡ hẹn</option>
+            </select>
+          </div>
 
-            <div className="event-modal-field">
-              <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <User size={16} /> Đối tác
-              </label>
-              <input 
-                type="text" 
-                className="glass-input" 
-                value={partner}
-                onChange={e => setPartner(e.target.value)}
-                placeholder="Tên người hẹn..."
-                style={{ width: '100%', boxSizing: 'border-box' }}
-              />
+          {/* 4. Đối tác */}
+          <div className="event-modal-field">
+            <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <User size={16} /> Đối tác
+            </label>
+            <input 
+              type="text" 
+              className="glass-input" 
+              value={partner}
+              onChange={e => setPartner(e.target.value)}
+              placeholder="Tên người hẹn..."
+              style={{ width: '100%', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          {/* 5. Địa điểm */}
+          <div className="event-modal-field">
+            <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <MapPin size={16} /> Địa điểm
+            </label>
+            <input 
+              type="text" 
+              className="glass-input" 
+              value={location}
+              onChange={e => setLocation(e.target.value)}
+              placeholder="Địa chỉ..."
+              style={{ width: '100%', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          {/* 6. Mức độ ưu tiên */}
+          <div className="event-modal-field">
+            <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Star size={16} /> Mức độ ưu tiên
+            </label>
+            <div style={{ background: 'rgba(0,0,0,0.25)', padding: '0.65rem 0.85rem', borderRadius: '8px', display: 'flex', alignItems: 'center', height: '44px', width: '100%', boxSizing: 'border-box' }}>
+              {renderStars()}
             </div>
           </div>
 
-          {/* Địa điểm & Mức độ ưu tiên */}
-          <div className="event-modal-grid">
-            <div className="event-modal-field">
-              <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <MapPin size={16} /> Địa điểm
-              </label>
-              <input 
-                type="text" 
-                className="glass-input" 
-                value={location}
-                onChange={e => setLocation(e.target.value)}
-                placeholder="Địa chỉ..."
-                style={{ width: '100%', boxSizing: 'border-box' }}
-              />
-            </div>
-
-            <div className="event-modal-field">
-              <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Star size={16} /> Mức độ ưu tiên
-              </label>
-              <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.55rem 0.75rem', borderRadius: '8px', display: 'flex', alignItems: 'center', height: '42px', boxSizing: 'border-box' }}>
-                {renderStars()}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {/* 7. Ghi chú */}
+          <div className="event-modal-field">
             <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <FileText size={16} /> Ghi chú
             </label>
@@ -237,52 +262,80 @@ export default function EventModal({ event, defaultDate, onClose, onSave }) {
               onChange={e => setNotes(e.target.value)}
               placeholder="Ghi chú thêm..."
               rows={3}
-              style={{ resize: 'vertical' }}
+              style={{ resize: 'vertical', width: '100%', boxSizing: 'border-box' }}
             />
           </div>
 
         </div>
 
-        {/* Footer */}
+        {/* Footer - Circular Icon Buttons */}
         <div style={{ 
-          padding: '1.25rem', 
+          padding: '1.1rem 1.5rem', 
           borderTop: '1px solid var(--border-color)',
           display: 'flex',
           justifyContent: 'flex-end',
-          gap: '1rem',
-          position: 'sticky',
-          bottom: 0,
+          alignItems: 'center',
+          gap: '1.25rem',
           backgroundColor: 'rgba(20, 25, 40, 0.95)',
           backdropFilter: 'blur(10px)',
-          borderRadius: '0 0 var(--radius-lg) var(--radius-lg)'
+          borderRadius: '0 0 var(--radius-lg) var(--radius-lg)',
+          flexShrink: 0
         }}>
           <button 
+            type="button"
             onClick={onClose}
+            title="Hủy"
             style={{
-              padding: '0.6rem 1.25rem',
-              borderRadius: '8px',
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              color: 'var(--text-primary)',
+              width: '42px',
+              height: '42px',
+              borderRadius: '50%',
+              background: 'rgba(239, 68, 68, 0.12)',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
+              color: 'var(--color-danger)',
               cursor: 'pointer',
-              fontWeight: '500'
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+              padding: 0,
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)'
+            }}
+            onMouseOver={e => {
+              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.25)';
+              e.currentTarget.style.transform = 'scale(1.08)';
+            }}
+            onMouseOut={e => {
+              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
+              e.currentTarget.style.transform = 'scale(1)';
             }}
           >
-            Hủy
+            <X size={20} />
           </button>
           <button 
+            type="button"
             onClick={handleSave}
-            className="btn-primary"
+            title="Lưu lại"
+            className="btn-gold"
             style={{
-              padding: '0.6rem 1.5rem',
-              borderRadius: '8px',
-              fontWeight: 'bold',
-              display: 'flex',
+              width: '42px',
+              height: '42px',
+              borderRadius: '50%',
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: '0.5rem'
+              justifyContent: 'center',
+              padding: 0,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 0 14px rgba(230, 185, 101, 0.45)'
+            }}
+            onMouseOver={e => {
+              e.currentTarget.style.transform = 'scale(1.08)';
+            }}
+            onMouseOut={e => {
+              e.currentTarget.style.transform = 'scale(1)';
             }}
           >
-            Lưu Lại
+            <Save size={20} />
           </button>
         </div>
       </div>

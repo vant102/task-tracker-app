@@ -62,21 +62,21 @@ export default function EntertainmentDashboard({ projectId, project }) {
               <col style={{ width: '60px' }} />
             </colgroup>
             <thead>
-              <tr style={{ backgroundColor: 'var(--bg-main)', color: 'var(--text-secondary)' }}>
-                <th style={{ padding: '0.75rem 0.75rem 0.75rem 1.25rem', position: 'sticky', left: 0, zIndex: 10, backgroundColor: 'rgba(20, 25, 40, 1)', borderRight: '1px solid var(--border-color)' }}>Sự kiện</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Thời gian</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Đối tác</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Địa điểm</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Ưu tiên</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Ghi chú</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Trạng thái</th>
-                <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>Xóa</th>
+              <tr style={{ backgroundColor: 'var(--bg-main)', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                <th style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--bg-main)' }}>Sự kiện</th>
+                <th style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--bg-main)' }}>Thời gian</th>
+                <th style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--bg-main)' }}>Đối tác</th>
+                <th style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--bg-main)' }}>Địa điểm</th>
+                <th style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--bg-main)' }}>Ưu tiên</th>
+                <th style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--bg-main)' }}>Ghi chú</th>
+                <th style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--bg-main)' }}>Trạng thái</th>
+                <th style={{ padding: '0.75rem 1rem', textAlign: 'center', backgroundColor: 'var(--bg-main)' }}>Xóa</th>
               </tr>
             </thead>
             <tbody>
               {tasks?.map(task => (
                 <tr key={task.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background-color 0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--bg-main)'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                  <td style={{ padding: '0.75rem 0.75rem 0.75rem 1.25rem', verticalAlign: 'top', position: 'sticky', left: 0, zIndex: 2, backgroundColor: 'rgba(20, 25, 40, 1)', borderRight: '1px solid var(--border-color)' }}>
+                  <td style={{ padding: '0.75rem 1rem', verticalAlign: 'top' }}>
                     <div 
                       onClick={() => handleEditTask(task)}
                       style={{ fontWeight: '600', color: 'var(--color-primary)', fontSize: '0.92rem', wordBreak: 'break-word', cursor: 'pointer', marginBottom: '0.4rem' }}
@@ -88,27 +88,45 @@ export default function EntertainmentDashboard({ projectId, project }) {
                       onClick={() => handleEditTask(task)}
                       title="Chỉnh sửa chi tiết"
                       style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '50%',
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '0.3rem',
-                        fontSize: '0.75rem',
-                        fontWeight: '500',
-                        color: 'var(--color-gold)',
-                        background: 'rgba(230, 185, 101, 0.12)',
-                        border: '1px solid rgba(230, 185, 101, 0.3)',
-                        padding: '0.25rem 0.6rem',
-                        borderRadius: '4px',
+                        justifyContent: 'center',
+                        color: '#e6b965',
+                        background: 'linear-gradient(135deg, rgba(230, 185, 101, 0.18) 0%, rgba(178, 142, 65, 0.28) 100%)',
+                        border: '1px solid rgba(230, 185, 101, 0.45)',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
                         cursor: 'pointer',
-                        transition: 'all 0.2s ease'
+                        transition: 'all 0.2s ease',
+                        padding: 0
                       }}
-                      onMouseOver={e => e.currentTarget.style.background = 'rgba(230, 185, 101, 0.25)'}
-                      onMouseOut={e => e.currentTarget.style.background = 'rgba(230, 185, 101, 0.12)'}
+                      onMouseOver={e => {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(230, 185, 101, 0.35) 0%, rgba(178, 142, 65, 0.45) 100%)';
+                        e.currentTarget.style.transform = 'scale(1.08)';
+                      }}
+                      onMouseOut={e => {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(230, 185, 101, 0.18) 0%, rgba(178, 142, 65, 0.28) 100%)';
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }}
                     >
-                      <Edit2 size={12} /> Sửa
+                      <Edit2 size={13} strokeWidth={2.2} />
                     </button>
                   </td>
-                  <td style={{ padding: '0.75rem 1rem', verticalAlign: 'top', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    {task.deadline ? new Date(task.deadline).toLocaleString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '---'}
+                  <td style={{ padding: '0.75rem 1rem', verticalAlign: 'top' }}>
+                    {task.deadline ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                        <span style={{ fontWeight: '500', color: 'var(--text-primary)', fontSize: '0.88rem' }}>
+                          {new Date(task.deadline).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                        </span>
+                        <span style={{ fontSize: '0.82rem', color: '#e6b965', fontWeight: '600' }}>
+                          {new Date(task.deadline).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    ) : (
+                      <span style={{ opacity: 0.4 }}>---</span>
+                    )}
                   </td>
                   <td style={{ padding: '0.75rem 1rem', verticalAlign: 'top', fontSize: '0.85rem' }}>
                     {task.partner || <span style={{ opacity: 0.4 }}>---</span>}
