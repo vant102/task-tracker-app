@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { deleteProject, useProjects, useTasks } from '../db/db';
-import { Folder, Hash, User, Edit2, Trash2, Calendar, Plus, CheckCircle2, Clock, Sparkles, Search, Filter, Layers, Building2, MapPin, Tag, ArrowRight, Play, Check, PauseCircle } from 'lucide-react';
+import { Folder, Hash, User, MapPin, Calendar, Plus, CheckCircle2, Clock, Sparkles, Search, Filter, Layers, Building2, Tag, Play, Check, Pause } from 'lucide-react';
 import ProjectFormModal from './ProjectFormModal';
 import { architecturalProcess } from '../constants/architecturalProcess';
 
@@ -12,26 +12,13 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
   const [subTab, setSubTab] = useState('working'); // 'working' | 'all'
   const [editingProject, setEditingProject] = useState(null);
   const [searchQuery, setSearchQuery] = useState(externalSearchQuery);
-  const [selectedYear, setSelectedYear] = useState('All');
+  const [yearQuery, setYearQuery] = useState('');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('Tất cả');
   const [selectedScopeFilter, setSelectedScopeFilter] = useState('Tất cả');
   const [selectedTypeFilter, setSelectedTypeFilter] = useState('Tất cả');
-  const [selectedStyleFilter, setSelectedStyleFilter] = useState('');
 
   const projects = useProjects() || [];
   const tasks = useTasks() || [];
-
-  const handleEditProject = (e, project) => {
-    e.stopPropagation();
-    setEditingProject(project);
-  };
-
-  const handleDeleteProject = async (e, id) => {
-    e.stopPropagation();
-    if (confirm("Bạn có chắc chắn muốn xóa dự án này?")) {
-      await deleteProject(id);
-    }
-  };
 
   // Helper to normalize project status
   const getProjectStatus = (p) => {
@@ -39,17 +26,6 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
     if (p.status === 'Paused' || p.status === 'Tạm dừng') return 'Tạm dừng';
     return 'Đang thực hiện'; // Default to Working
   };
-
-  // Extract all available years from projects
-  const availableYears = Array.from(new Set(
-    projects.map(p => {
-      if (p.start_month) return p.start_month.split('-')[0];
-      if (p.Nam) return String(p.Nam);
-      if (p.project_id_code && p.project_id_code.includes('_')) return p.project_id_code.split('_')[0];
-      if (p.createdAt) return new Date(p.createdAt).getFullYear().toString();
-      return '2026';
-    })
-  )).filter(Boolean).sort((a, b) => b.localeCompare(a));
 
   // Count projects for tab badges
   const workingCount = projects.filter(p => getProjectStatus(p) === 'Đang thực hiện').length;
@@ -68,7 +44,7 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
     const matchCategory = selectedCategories.length === 0 || selectedCategories.includes(p.category || 'Dự án thiết kế');
     if (!matchCategory) return false;
 
-    // Search query filter
+    // Search query filter (Name, ID, Client, Location, Style)
     const query = searchQuery.toLowerCase().trim();
     if (query) {
       const matchName = p.name?.toLowerCase().includes(query);
@@ -81,24 +57,44 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
 
     // Additional filters for All Projects view
     if (subTab === 'all') {
-      // Year filter
-      if (selectedYear !== 'All') {
-        const pYear = p.start_month ? p.start_month.split('-')[0] : (p.Nam || (p.project_id_code ? p.project_id_code.split('_')[0] : ''));
-        if (pYear !== selectedYear) return false;
+      // 1. Year input filter (YYYY e.g. 2012, 2026) matching start_month and end_month range
+      if (yearQuery.trim()) {
+        const targetYear = parseInt(yearQuery.trim(), 10);
+        if (!isNaN(targetYear)) {
+          const startY = p.start_month ? parseInt(p.start_month.split('-')[0], 10) : (p.start_date ? new Date(p.start_date).getFullYear() : null);
+          const endY = p.end_month ? parseInt(p.end_month.split('-')[0], 10) : (p.end_date ? new Date(p.end_date).getFullYear() : null);
+          const rawYear = p.Nam ? parseInt(p.Nam, 10) : null;
+          const codeYear = (p.project_id_code && p.project_id_code.includes('_')) ? parseInt(p.project_id_code.split('_')[0], 10) : null;
+
+          let matchYear = false;
+          if (startY && endY) {
+            matchYear = targetYear >= Math.min(startY, endY) && targetYear <= Math.max(startY, endY);
+          } else if (startY) {
+            matchYear = targetYear === startY;
+          } else if (endY) {
+            matchYear = targetYear === endY;
+          } else if (rawYear) {
+            matchYear = targetYear === rawYear;
+          } else if (codeYear) {
+            matchYear = targetYear === codeYear;
+          }
+
+          if (!matchYear) return false;
+        }
       }
 
-      // Status filter
+      // 2. Status filter
       if (selectedStatusFilter !== 'Tất cả') {
         if (pStatus !== selectedStatusFilter) return false;
       }
 
-      // Scope filter
+      // 3. Scope filter
       if (selectedScopeFilter !== 'Tất cả') {
         const pScopes = Array.isArray(p.scope) ? p.scope : (p.scope ? [p.scope] : []);
         if (!pScopes.includes(selectedScopeFilter)) return false;
       }
 
-      // Type filter
+      // 4. Type filter
       if (selectedTypeFilter !== 'Tất cả') {
         if (p.project_type !== selectedTypeFilter) return false;
       }
@@ -113,7 +109,7 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
       {/* Top Header & Sub-Tab Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', gap: '1rem', flexWrap: 'wrap' }}>
         
-        {/* Sub-Tabs: Working vs All Projects */}
+        {/* Sub-Tabs: Working vs All */}
         <div style={{ 
           display: 'inline-flex', 
           background: 'rgba(15, 23, 42, 0.65)', 
@@ -125,7 +121,7 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
           <button
             onClick={() => setSubTab('working')}
             style={{
-              padding: '0.45rem 1.1rem',
+              padding: '0.45rem 1.25rem',
               borderRadius: '8px',
               fontSize: '0.88rem',
               fontWeight: subTab === 'working' ? '700' : '500',
@@ -135,12 +131,12 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '0.4rem',
+              gap: '0.45rem',
               transition: 'all 0.2s ease'
             }}
           >
             <Play size={14} fill={subTab === 'working' ? '#e6b965' : 'transparent'} />
-            Đang thực hiện
+            Working
             <span style={{ 
               fontSize: '0.75rem', 
               background: subTab === 'working' ? 'rgba(230, 185, 101, 0.25)' : 'rgba(255,255,255,0.08)', 
@@ -154,7 +150,7 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
           <button
             onClick={() => setSubTab('all')}
             style={{
-              padding: '0.45rem 1.1rem',
+              padding: '0.45rem 1.25rem',
               borderRadius: '8px',
               fontSize: '0.88rem',
               fontWeight: subTab === 'all' ? '700' : '500',
@@ -164,12 +160,12 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '0.4rem',
+              gap: '0.45rem',
               transition: 'all 0.2s ease'
             }}
           >
             <Folder size={14} />
-            Tất cả Dự án (All Projects)
+            All
             <span style={{ 
               fontSize: '0.75rem', 
               background: subTab === 'all' ? 'rgba(59, 130, 246, 0.25)' : 'rgba(255,255,255,0.08)', 
@@ -239,7 +235,7 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
         </div>
       </div>
 
-      {/* Filter Bar for "All Projects" view */}
+      {/* Filter Bar for "All" view */}
       {subTab === 'all' && (
         <div style={{ 
           display: 'flex', 
@@ -252,24 +248,21 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
           marginBottom: '1.25rem',
           alignItems: 'center'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--color-primary)', fontSize: '0.82rem', fontWeight: 'bold', marginRight: '0.4rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--color-primary)', fontSize: '0.82rem', fontWeight: 'bold', marginRight: '0.3rem' }}>
             <Filter size={14} /> Bộ lọc:
           </div>
 
-          {/* 1. Năm */}
+          {/* 1. Nhập Số Năm (YYYY ví dụ 2012, 2026) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Năm:</span>
-            <select 
-              value={selectedYear} 
-              onChange={e => setSelectedYear(e.target.value)}
+            <input 
+              type="number" 
+              placeholder="VD: 2026" 
+              value={yearQuery} 
+              onChange={e => setYearQuery(e.target.value)}
               className="glass-input" 
-              style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', borderRadius: '6px' }}
-            >
-              <option value="All">Tất cả năm</option>
-              {availableYears.map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
+              style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', borderRadius: '6px', width: '90px' }} 
+            />
           </div>
 
           {/* 2. Trạng thái */}
@@ -319,11 +312,11 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
             </select>
           </div>
 
-          {/* Reset Filters button if any filter applied */}
-          {(selectedYear !== 'All' || selectedStatusFilter !== 'Tất cả' || selectedScopeFilter !== 'Tất cả' || selectedTypeFilter !== 'Tất cả') && (
+          {/* Reset Filters button */}
+          {(yearQuery || selectedStatusFilter !== 'Tất cả' || selectedScopeFilter !== 'Tất cả' || selectedTypeFilter !== 'Tất cả') && (
             <button
               onClick={() => {
-                setSelectedYear('All');
+                setYearQuery('');
                 setSelectedStatusFilter('Tất cả');
                 setSelectedScopeFilter('Tất cả');
                 setSelectedTypeFilter('Tất cả');
@@ -347,7 +340,7 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
       {/* Main Project Bento Grid */}
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
+        gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', 
         gap: '1.25rem',
         overflowY: 'auto',
         paddingRight: '0.25rem',
@@ -387,8 +380,8 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
               flexDirection: 'column', 
               gap: '0.85rem', 
               borderTop: `4px solid ${
-                pStatus === 'Hoàn thành' ? 'var(--color-success)' :
-                pStatus === 'Tạm dừng' ? 'var(--color-warning)' : 'var(--color-primary)'
+                pStatus === 'Hoàn thành' ? '#10b981' :
+                pStatus === 'Tạm dừng' ? '#f59e0b' : 'var(--color-primary)'
               }`,
               cursor: 'pointer',
               padding: '1.1rem',
@@ -404,7 +397,7 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
               e.currentTarget.style.boxShadow = 'none';
             }}
           >
-            {/* Image & Quick Action Header */}
+            {/* Image Box */}
             <div className="project-img-container" style={{ position: 'relative', height: '140px' }}>
               {project.image_url ? (
                 <img src={project.image_url} alt={project.name} className="project-img" />
@@ -414,73 +407,108 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
                 </div>
               )}
 
-              {/* Status Badge Over Image */}
-              <div style={{ 
-                position: 'absolute', 
-                top: '0.5rem', 
-                left: '0.5rem',
-                backgroundColor: 'rgba(15, 23, 42, 0.85)',
-                backdropFilter: 'blur(6px)',
-                padding: '0.2rem 0.55rem',
-                borderRadius: '12px',
-                fontSize: '0.72rem',
-                fontWeight: '700',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.3rem',
-                color: pStatus === 'Hoàn thành' ? 'var(--color-success)' : pStatus === 'Tạm dừng' ? 'var(--color-warning)' : 'var(--color-primary)',
-                border: `1px solid ${pStatus === 'Hoàn thành' ? 'rgba(16, 185, 129, 0.3)' : pStatus === 'Tạm dừng' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`
-              }}>
-                {pStatus === 'Hoàn thành' ? <Check size={11} /> : pStatus === 'Tạm dừng' ? <PauseCircle size={11} /> : <Play size={11} />}
-                {pStatus}
-              </div>
-
-              {/* Edit Button Over Image */}
-              <button
-                type="button"
-                onClick={(e) => handleEditProject(e, project)}
-                title="Chỉnh sửa dự án"
+              {/* Status Indicator Icon (My Progress Board style) replacing old Edit button */}
+              <div 
+                title={`Trạng thái: ${pStatus}`}
                 style={{
                   position: 'absolute',
                   top: '0.5rem',
                   right: '0.5rem',
-                  width: '28px',
-                  height: '28px',
+                  width: '32px',
+                  height: '32px',
                   borderRadius: '50%',
-                  backgroundColor: 'rgba(15, 23, 42, 0.85)',
+                  backgroundColor: 'rgba(15, 23, 42, 0.88)',
                   backdropFilter: 'blur(6px)',
-                  border: '1px solid rgba(230, 185, 101, 0.45)',
-                  color: '#e6b965',
+                  border: `1px solid ${
+                    pStatus === 'Hoàn thành' ? 'rgba(16, 185, 129, 0.45)' :
+                    pStatus === 'Tạm dừng' ? 'rgba(245, 158, 11, 0.45)' : 'rgba(59, 130, 246, 0.45)'
+                  }`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  cursor: 'pointer',
-                  padding: 0
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
                 }}
               >
-                <Edit2 size={13} />
-              </button>
+                {pStatus === 'Hoàn thành' ? (
+                  <Check size={16} strokeWidth={3} color="#10b981" />
+                ) : pStatus === 'Tạm dừng' ? (
+                  <Pause size={14} fill="#f59e0b" color="#f59e0b" />
+                ) : (
+                  <Play size={14} fill="#3b82f6" color="#3b82f6" />
+                )}
+              </div>
             </div>
             
             {/* Content Body */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem', flex: 1 }}>
               
-              {/* Project Title & Code */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'white', lineHeight: '1.35', margin: 0 }}>
-                    {project.name}
-                  </h3>
-                  {project.project_id_code && (
-                    <span style={{ fontSize: '0.72rem', color: '#94a3b8', background: 'rgba(255,255,255,0.06)', padding: '0.1rem 0.4rem', borderRadius: '4px', whiteSpace: 'nowrap' }}>
-                      {project.project_id_code}
-                    </span>
-                  )}
+              {/* 1.1: Tên Dự án (2 dòng chừa sẵn đều nhau) */}
+              <h3 style={{ 
+                fontSize: '1.05rem', 
+                fontWeight: '700', 
+                color: 'white', 
+                lineHeight: '1.4', 
+                margin: 0,
+                minHeight: '2.8em',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}>
+                {project.name}
+              </h3>
+
+              {/* 1.2: Mã ID, Chủ đầu tư, Địa điểm - Mỗi mục 1 hàng độc lập */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                {/* Hàng 1: Mã ID */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span style={{ color: '#94a3b8', fontWeight: '500' }}>Mã ID:</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>
+                    {project.project_id_code || project.ID || '---'}
+                  </span>
+                </div>
+
+                {/* Hàng 2: Tên chủ đầu tư */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span style={{ color: '#94a3b8', fontWeight: '500' }}>Chủ đầu tư:</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {project.client || '---'}
+                  </span>
+                </div>
+
+                {/* Hàng 3: Địa điểm */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span style={{ color: '#94a3b8', fontWeight: '500' }}>Địa điểm:</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {project.location || '---'}
+                  </span>
                 </div>
               </div>
 
+              {/* 1.3: Với dự án Đang thực hiện -> Có thêm 2 dòng: Chốt giai đoạn (hàng trên) & Ngày tháng năm (hàng dưới) */}
+              {pStatus === 'Đang thực hiện' && project.phase_deadline && (
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '0.15rem', 
+                  backgroundColor: 'rgba(15, 23, 42, 0.45)', 
+                  padding: '0.4rem 0.6rem', 
+                  borderRadius: '6px', 
+                  border: '1px solid rgba(230, 185, 101, 0.25)',
+                  marginTop: '0.2rem'
+                }}>
+                  <span style={{ fontSize: '0.75rem', color: '#e6b965', fontWeight: '600' }}>
+                    Chốt giai đoạn:
+                  </span>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700' }}>
+                    {new Date(project.phase_deadline).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                  </span>
+                </div>
+              )}
+
               {/* Scopes & Type Badges */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.1rem' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.15rem' }}>
                 {project.project_type && (
                   <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.45rem', borderRadius: '4px', backgroundColor: 'rgba(59, 130, 246, 0.15)', color: 'var(--color-primary)', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
                     {project.project_type}
@@ -493,35 +521,11 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
                 ))}
               </div>
 
-              {/* Metadata details: Client, Location, Timeline */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                {project.client && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <User size={13} opacity={0.6} /> <span>{project.client}</span>
-                  </div>
-                )}
-                {project.location && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <MapPin size={13} opacity={0.6} /> <span>{project.location}</span>
-                  </div>
-                )}
-                {(project.start_month || project.end_month) && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <Calendar size={13} opacity={0.6} />
-                    <span>
-                      {project.start_month ? project.start_month.split('-').reverse().join('/') : '---'}
-                      {' → '}
-                      {project.end_month ? project.end_month.split('-').reverse().join('/') : 'Hiện tại'}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Progress Bar (For Working Projects) */}
+              {/* Progress Bar */}
               <div style={{ width: '100%', marginTop: 'auto', paddingTop: '0.4rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: '0.3rem' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>Tiến độ thiết kế</span>
-                  <span style={{ fontWeight: '800', color: pStatus === 'Hoàn thành' ? 'var(--color-success)' : 'var(--color-primary)' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>Tiến độ</span>
+                  <span style={{ fontWeight: '800', color: pStatus === 'Hoàn thành' ? '#10b981' : pStatus === 'Tạm dừng' ? '#f59e0b' : 'var(--color-primary)' }}>
                     {progress}%
                   </span>
                 </div>
@@ -529,7 +533,7 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
                   <div style={{ 
                     width: `${progress}%`, 
                     height: '100%', 
-                    backgroundColor: pStatus === 'Hoàn thành' ? 'var(--color-success)' : 'var(--color-primary)', 
+                    backgroundColor: pStatus === 'Hoàn thành' ? '#10b981' : pStatus === 'Tạm dừng' ? '#f59e0b' : 'var(--color-primary)', 
                     transition: 'width 0.4s ease' 
                   }}></div>
                 </div>
