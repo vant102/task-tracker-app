@@ -90,13 +90,13 @@ export default function ArchitecturalProcess({ project }) {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 {renderStatusIcon(status)}
-                <h3 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <h3 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: status === 'Hoàn thành' ? 'var(--text-secondary)' : 'var(--color-primary)' }}>
                   {stage.title}
                 </h3>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <span style={{ 
-                  fontSize: '0.875rem', 
+                  fontSize: '0.75rem', 
                   fontWeight: '600',
                   color: status === 'Hoàn thành' ? 'var(--color-success)' : status === 'Đang thực hiện' ? 'var(--color-primary)' : 'var(--text-secondary)',
                   backgroundColor: 'var(--bg-main)',
@@ -114,7 +114,7 @@ export default function ArchitecturalProcess({ project }) {
               <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 {stage.groups.map((group, gIndex) => (
                   <div key={gIndex} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <h4 style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       {group.title}
                     </h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -149,7 +149,7 @@ export default function ArchitecturalProcess({ project }) {
                               </div>
                               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
                                 <span style={{ 
-                                  fontSize: '0.95rem',
+                                  fontSize: '0.8rem',
                                   color: isChecked ? 'var(--text-secondary)' : 'var(--text-primary)',
                                   textDecoration: isChecked ? 'line-through' : 'none',
                                   lineHeight: '1.4',
@@ -189,7 +189,7 @@ export default function ArchitecturalProcess({ project }) {
                                     </button>
                                   </div>
                                 ) : (
-                                  <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontStyle: 'italic', marginTop: '0.25rem' }}>
+                                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic', marginTop: '0.25rem' }}>
                                     📝 {note}
                                   </div>
                                 )}

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { updateProject, updateTask, addProjectLog, updateProjectLog, deleteProjectLog, useProjects, useProjectTasks, useProjectLogs } from '../db/db';
+import React, { useState, useEffect } from 'react';
+import { updateProject, deleteProject, updateTask, addProjectLog, updateProjectLog, deleteProjectLog, useProjects, useProjectTasks, useProjectLogs } from '../db/db';
 import { ArrowLeft, Clock, Send, Play, Pause, CheckCircle, Edit2, Trash2 } from 'lucide-react';
 import PersonalProjectDetail from './PersonalProjectDetail';
 import ArchitecturalProcess from './ArchitecturalProcess';
@@ -8,12 +8,21 @@ export default function ProjectDetail({ projectId, onBack }) {
   const projects = useProjects();
   const project = projects?.find(p => p.id === projectId);
   const tasks = useProjectTasks(projectId) || [];
-  const logs = useProjectLogs(projectId) || [];
+  const rawLogs = useProjectLogs(projectId) || [];
+  const logs = [...rawLogs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   
   const [newLog, setNewLog] = useState('');
   const [editingLogId, setEditingLogId] = useState(null);
   const [editLogContent, setEditLogContent] = useState('');
   const [editLogDate, setEditLogDate] = useState('');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+
+  useEffect(() => {
+    if (project?.name) {
+      setNameInput(project.name);
+    }
+  }, [project?.name]);
   
   // Tab state for Design Projects
   const [activeSubTab, setActiveSubTab] = useState('process'); // 'process' or 'tasks'
@@ -65,6 +74,13 @@ export default function ProjectDetail({ projectId, onBack }) {
     await updateProject(projectId, { [field]: value });
   };
 
+  const handleDeleteCurrentProject = async () => {
+    if (confirm('Bạn có chắc chắn muốn xóa dự án này? Dữ liệu dự án sẽ bị xóa hoàn toàn.')) {
+      await deleteProject(projectId);
+      onBack();
+    }
+  };
+
   const renderStatusIcon = (status) => {
     switch (status) {
       case 'To do': return <Clock size={16} color="var(--text-secondary)" />;
@@ -89,12 +105,113 @@ export default function ProjectDetail({ projectId, onBack }) {
         
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
-          <button onClick={onBack} style={{ padding: '0.5rem', backgroundColor: 'var(--bg-main)', borderRadius: 'var(--radius-sm)' }}>
-            <ArrowLeft size={20} />
+          <button onClick={onBack} style={{ padding: '0.5rem', backgroundColor: 'var(--color-primary)', borderRadius: 'var(--radius-sm)' }}>
+            <ArrowLeft size={20} color="white" />
           </button>
-          <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{project.name}</h2>
-            <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Danh mục: {project.category}</span>
+          
+          {/* Editable Project Title & Header Actions */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            {isEditingName ? (
+              <input 
+                type="text" 
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                onBlur={async () => {
+                  setIsEditingName(false);
+                  if (nameInput.trim() && nameInput !== project.name) {
+                    await handleUpdateProjectMeta('name', nameInput.trim());
+                  }
+                }}
+                onKeyDown={async (e) => {
+                  if (e.key === 'Enter') {
+                    setIsEditingName(false);
+                    if (nameInput.trim() && nameInput !== project.name) {
+                      await handleUpdateProjectMeta('name', nameInput.trim());
+                    }
+                  }
+                }}
+                autoFocus
+                style={{
+                  fontSize: '1.5rem',
+                  fontWeight: 'bold',
+                  color: 'var(--text-primary)',
+                  backgroundColor: 'var(--bg-main)',
+                  border: '1px solid var(--color-primary)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '0.2rem 0.5rem',
+                  outline: 'none',
+                  width: '100%',
+                  maxWidth: '450px'
+                }}
+              />
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <h2 
+                  onClick={() => setIsEditingName(true)}
+                  style={{ fontSize: '1.5rem', fontWeight: 'bold', cursor: 'pointer' }}
+                  title="Nhấn để sửa tên dự án"
+                >
+                  {project.name}
+                </h2>
+                <button 
+                  onClick={() => setIsEditingName(true)} 
+                  title="Sửa tên dự án"
+                  style={{ 
+                    width: '32px', 
+                    height: '32px', 
+                    borderRadius: '50%', 
+                    color: 'var(--color-primary)', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    background: 'rgba(59, 130, 246, 0.12)', 
+                    border: '1px solid rgba(59, 130, 246, 0.3)', 
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    marginLeft: '0.5rem'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.background = 'rgba(59, 130, 246, 0.25)';
+                    e.currentTarget.style.boxShadow = '0 0 10px rgba(59, 130, 246, 0.3)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.background = 'rgba(59, 130, 246, 0.12)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <Edit2 size={15} />
+                </button>
+
+                <button 
+                  onClick={handleDeleteCurrentProject} 
+                  title="Xóa dự án này"
+                  style={{ 
+                    width: '32px', 
+                    height: '32px', 
+                    borderRadius: '50%', 
+                    color: 'var(--color-danger)', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    background: 'rgba(239, 68, 68, 0.12)', 
+                    border: '1px solid rgba(239, 68, 68, 0.3)', 
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    marginLeft: '0.25rem'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.25)';
+                    e.currentTarget.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.3)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -251,7 +368,7 @@ export default function ProjectDetail({ projectId, onBack }) {
 
           {/* Nhật ký Dự án (Meeting Logs) */}
           <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%', maxHeight: 'calc(100vh - 250px)' }}>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>Nhật ký & Quyết định</h3>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>Nhật ký & Quyết định</h3>
             
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '0.5rem' }}>
               {logs.map(log => (
@@ -265,9 +382,13 @@ export default function ProjectDetail({ projectId, onBack }) {
                       <button onClick={() => { 
                         setEditingLogId(log.id); 
                         setEditLogContent(log.content); 
-                        const d = new Date(log.date);
-                        const localISO = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0,16);
-                        setEditLogDate(localISO);
+                        if (log.date) {
+                          const d = new Date(log.date);
+                          const tzOffset = d.getTimezoneOffset() * 60000;
+                          setEditLogDate(new Date(d.getTime() - tzOffset).toISOString().slice(0, 16));
+                        } else {
+                          setEditLogDate('');
+                        }
                       }} style={{ color: 'var(--text-secondary)', background: 'transparent', padding: '0.25rem' }}>
                         <Edit2 size={12} />
                       </button>
@@ -282,7 +403,7 @@ export default function ProjectDetail({ projectId, onBack }) {
                         type="datetime-local" 
                         value={editLogDate} 
                         onChange={(e) => setEditLogDate(e.target.value)}
-                        style={{ width: 'fit-content', padding: '0.25rem 0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'transparent', color: 'var(--text-secondary)', fontSize: '0.75rem', outline: 'none' }}
+                        style={{ padding: '0.4rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-main)', color: 'white', outline: 'none', fontSize: '0.75rem', width: 'fit-content' }}
                       />
                       <textarea 
                         value={editLogContent} 
@@ -312,7 +433,7 @@ export default function ProjectDetail({ projectId, onBack }) {
                 value={newLog}
                 onChange={(e) => setNewLog(e.target.value)}
                 placeholder="Ghi lại các chốt biên bản họp..."
-                style={{ flex: 1, padding: '0.75rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'white', backgroundColor: 'transparent' }}
+                style={{ flex: 1, padding: '0.75rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', outline: 'none', color: 'white', backgroundColor: 'rgba(0,0,0,0.2)' }}
               />
               <button type="submit" className="btn-gold" style={{ padding: '0 1rem' }}>
                 <Send size={18} />
@@ -334,8 +455,8 @@ export default function ProjectDetail({ projectId, onBack }) {
   return (
     <div className="card">
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem', marginBottom: '1rem' }}>
-        <button onClick={onBack} style={{ padding: '0.5rem', backgroundColor: 'var(--bg-main)', borderRadius: 'var(--radius-sm)' }}>
-          <ArrowLeft size={20} />
+        <button onClick={onBack} style={{ padding: '0.5rem', backgroundColor: 'var(--color-primary)', borderRadius: 'var(--radius-sm)' }}>
+          <ArrowLeft size={20} color="white" />
         </button>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{project.name}</h2>
       </div>

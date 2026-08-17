@@ -35,60 +35,128 @@ function App() {
         {/* Header - Top Navigation */}
         <header className="header-main">
           <div className="title-group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <h1>WorkLife</h1>
+            <h1 style={{ 
+              background: 'linear-gradient(90deg, var(--color-primary) 35%, #f08967 75%, #ea580c 100%)', 
+              WebkitBackgroundClip: 'text', 
+              WebkitTextFillColor: 'transparent', 
+              display: 'inline-block', 
+              margin: 0,
+              fontSize: '2rem',
+              fontWeight: '800',
+              fontFamily: 'Space Grotesk, sans-serif'
+            }}>WorkLife</h1>
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{currentUser.email}</span>
-              <button onClick={logout} style={{ color: 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', padding: '0.5rem 1rem', borderRadius: '8px' }}>
-                <LogOut size={16} /> Thoát
+              {currentUser.photoURL ? (
+                <img 
+                  src={currentUser.photoURL} 
+                  alt="User Avatar" 
+                  title={currentUser.email}
+                  style={{ 
+                    width: '38px', 
+                    height: '38px', 
+                    borderRadius: '50%', 
+                    objectFit: 'cover', 
+                    border: '2px solid rgba(240, 137, 103, 0.8)', 
+                    boxShadow: '0 0 12px rgba(240, 137, 103, 0.4)',
+                    cursor: 'pointer'
+                  }} 
+                />
+              ) : (
+                <div 
+                  title={currentUser.email}
+                  style={{ 
+                    width: '38px', 
+                    height: '38px', 
+                    borderRadius: '50%', 
+                    background: 'linear-gradient(135deg, #f08967 0%, #ea580c 100%)', 
+                    color: 'white', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    fontWeight: 'bold', 
+                    fontSize: '1rem',
+                    boxShadow: '0 0 12px rgba(240, 137, 103, 0.4)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {currentUser.email ? currentUser.email.charAt(0).toUpperCase() : 'U'}
+                </div>
+              )}
+              
+              <button 
+                onClick={logout} 
+                title="Thoát tài khoản"
+                style={{ 
+                  width: '38px', 
+                  height: '38px', 
+                  borderRadius: '50%', 
+                  color: 'var(--color-danger)', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  background: 'rgba(239, 68, 68, 0.12)', 
+                  border: '1px solid rgba(239, 68, 68, 0.25)', 
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.25)';
+                  e.currentTarget.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.3)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <LogOut size={18} />
               </button>
             </div>
           </div>
           
-          <div className="tabs">
+          {/* Liquid Navigation Bar #2 */}
+          <nav className="nav-liquid-bar">
             <button
-              className={`tab-btn ${activeTab === 'projects' || activeTab === 'projectDetail' ? 'active' : ''}`}
+              className={`nav-liquid-item ${activeTab === 'projects' || activeTab === 'projectDetail' ? 'active' : ''}`}
               onClick={() => { setActiveTab('projects'); setSelectedProjectId(null); }}
             >
-              <img src="/Work.svg" alt="" style={{ width: '20px', height: '20px', flexShrink: 0 }} />
-              Work
+              <div className="nav-liquid-icon-container">
+                <img src="/Work.svg" alt="Work" className="nav-liquid-icon" />
+              </div>
+              <span className="nav-liquid-text">Work</span>
             </button>
+
             <button
-              className={`tab-btn ${activeTab === 'personal' ? 'active' : ''}`}
+              className={`nav-liquid-item ${activeTab === 'personal' ? 'active' : ''}`}
               onClick={() => setActiveTab('personal')}
             >
-              <img src="/Skills.svg" alt="" style={{ width: '20px', height: '20px', flexShrink: 0 }} />
-              Skills
+              <div className="nav-liquid-icon-container">
+                <img src="/Skills.svg" alt="Skills" className="nav-liquid-icon" />
+              </div>
+              <span className="nav-liquid-text">Skills</span>
             </button>
+
             <button
-              className={`tab-btn ${activeTab === 'entertainment' ? 'active' : ''}`}
+              className={`nav-liquid-item ${activeTab === 'entertainment' ? 'active' : ''}`}
               onClick={() => setActiveTab('entertainment')}
             >
-              <img src="/Relax.svg" alt="" style={{ width: '20px', height: '20px', flexShrink: 0 }} />
-              Relax
+              <div className="nav-liquid-icon-container">
+                <img src="/Relax.svg" alt="Relax" className="nav-liquid-icon" />
+              </div>
+              <span className="nav-liquid-text">Relax</span>
             </button>
+
             <button
-              className={`tab-btn ${activeTab === 'calendar' ? 'active' : ''}`}
+              className={`nav-liquid-item ${activeTab === 'calendar' ? 'active' : ''}`}
               onClick={() => setActiveTab('calendar')}
             >
-              <img src="/Plan.svg" alt="" style={{ width: '20px', height: '20px', flexShrink: 0 }} />
-              Plan
-            </button>
-          </div>
-          
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', minWidth: '250px', justifyContent: 'flex-end' }}>
-            {activeTab === 'projects' && (
-              <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'var(--bg-main)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-sm)', padding: '0 0.5rem' }}>
-                <Search size={16} color="var(--text-secondary)" />
-                <input 
-                  type="text" 
-                  placeholder="Tìm kiếm dự án..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{ border: 'none', outline: 'none', backgroundColor: 'transparent', padding: '0.5rem', fontSize: '0.875rem', width: '200px', color: 'var(--text-primary)' }}
-                />
+              <div className="nav-liquid-icon-container">
+                <img src="/Plan.svg" alt="Plan" className="nav-liquid-icon" />
               </div>
-            )}
-          </div>
+              <span className="nav-liquid-text">Plan</span>
+            </button>
+          </nav>
         </header>
 
         {/* Main Content */}

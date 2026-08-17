@@ -3,13 +3,23 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginScreen() {
   const { loginWithGoogle } = useAuth();
+  const [loading, setLoading] = React.useState(false);
 
   const handleLogin = async () => {
+    if (loading) return;
+    setLoading(true);
     try {
       await loginWithGoogle();
     } catch (error) {
       console.error("Firebase Login Error:", error);
-      alert('Đăng nhập thất bại!\n\nLỗi (' + error.code + '): ' + error.message);
+      // Handle specific error codes
+      if (error.code === 'auth/popup-blocked') {
+        alert('Trình duyệt của bạn đang CẤM mở cửa sổ Popup!\n\nVui lòng bấm vào biểu tượng chặn Popup ở góc trên thanh địa chỉ trình duyệt và chọn "Luôn cho phép" để đăng nhập.');
+      } else if (error.code !== 'auth/cancelled-popup-request' && error.code !== 'auth/popup-closed-by-user') {
+        alert('Đăng nhập thất bại!\n\nLỗi (' + error.code + '): ' + error.message);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -30,8 +40,9 @@ export default function LoginScreen() {
           
           <button 
             onClick={handleLogin}
+            disabled={loading}
             className="btn-gold" 
-            style={{ width: '100%', padding: '1rem', fontSize: '1.1rem', gap: '0.75rem', justifyContent: 'center' }}
+            style={{ width: '100%', padding: '1rem', fontSize: '1.1rem', gap: '0.75rem', justifyContent: 'center', opacity: loading ? 0.7 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
           >
             <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
               <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
@@ -41,7 +52,7 @@ export default function LoginScreen() {
                 <path fill="#EA4335" d="M -14.754 43.989 C -12.984 43.989 -11.404 44.599 -10.154 45.789 L -6.734 42.369 C -8.804 40.429 -11.514 39.239 -14.754 39.239 C -19.444 39.239 -23.494 41.939 -25.464 45.859 L -21.484 48.949 C -20.534 46.099 -17.884 43.989 -14.754 43.989 Z"/>
               </g>
             </svg>
-            Đăng nhập bằng Google
+            {loading ? 'Đang mở cửa sổ đăng nhập...' : 'Đăng nhập bằng Google'}
           </button>
         </div>
       </div>

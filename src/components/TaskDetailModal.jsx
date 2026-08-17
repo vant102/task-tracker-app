@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { updateTask, deleteTask } from '../db/db';
-import { X, Clock, Target, FileText, Bookmark, Link as LinkIcon, Edit2, Trash2 } from 'lucide-react';
+import { X, Clock, Target, FileText, Bookmark, Link as LinkIcon, Edit2, Trash2, Plus, Save } from 'lucide-react';
 
 export default function TaskDetailModal({ task, onClose }) {
   const [notes, setNotes] = useState(task.notes || '');
@@ -15,6 +15,7 @@ export default function TaskDetailModal({ task, onClose }) {
   const [habitNotes, setHabitNotes] = useState(task.habit_notes || []);
   const [searchDate, setSearchDate] = useState('');
   const [newHabitDate, setNewHabitDate] = useState(new Date().toISOString().split('T')[0]);
+  const [newHabitContent, setNewHabitContent] = useState('');
   const [title, setTitle] = useState(task.title || '');
   const [status, setStatus] = useState(task.status || 'Chuẩn bị');
   const [startDate, setStartDate] = useState(task.start_date || '');
@@ -99,13 +100,8 @@ export default function TaskDetailModal({ task, onClose }) {
   };
 
   return (
-    <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      zIndex: 1000
-    }}>
-      <div className="card" style={{ width: '90vw', height: '90vh', maxWidth: '1200px', display: 'flex', flexDirection: 'column', gap: '1.5rem', boxShadow: 'var(--shadow-lg)', overflowY: 'auto' }}>
+    <div className="task-modal-overlay">
+      <div className="card task-modal-card glass-panel">
         
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ flex: 1, marginRight: '1rem' }}>
@@ -122,10 +118,10 @@ export default function TaskDetailModal({ task, onClose }) {
           <button onClick={onClose} style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}><X size={24} /></button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: task.task_type === 'Project' ? '1fr' : '1fr 1fr', gap: '1rem', backgroundColor: 'var(--bg-main)', padding: '1rem', borderRadius: 'var(--radius-sm)' }}>
+        <div className={task.task_type === 'Project' ? '' : 'modal-grid-2'} style={{ backgroundColor: 'var(--bg-main)', padding: '1rem', borderRadius: 'var(--radius-sm)' }}>
           {task.task_type === 'Project' ? (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <Clock size={16} color="var(--color-primary)" />
                 <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>Kế hoạch:</span>
                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={{ padding: '0.25rem', fontSize: '0.875rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', backgroundColor: 'transparent', color: 'var(--text-primary)', outline: 'none' }} />
@@ -135,10 +131,24 @@ export default function TaskDetailModal({ task, onClose }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Target size={16} color="var(--color-success)" />
                 <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>Trạng thái:</span>
-                <select value={status} onChange={e => setStatus(e.target.value)} style={{ padding: '0.25rem 0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'transparent', color: 'var(--text-primary)', outline: 'none', fontSize: '0.875rem', cursor: 'pointer' }}>
-                  <option value="Chuẩn bị">Chuẩn bị</option>
-                  <option value="Đang thực hiện">Đang thực hiện</option>
-                  <option value="Đã hoàn thành">Đã hoàn thành</option>
+                <select 
+                  value={status} 
+                  onChange={e => setStatus(e.target.value)} 
+                  style={{ 
+                    padding: '0.35rem 0.6rem', 
+                    borderRadius: 'var(--radius-sm)', 
+                    border: '1px solid var(--color-primary)', 
+                    backgroundColor: '#0f172a', 
+                    color: '#ffffff', 
+                    outline: 'none', 
+                    fontSize: '0.875rem', 
+                    cursor: 'pointer',
+                    fontWeight: '500'
+                  }}
+                >
+                  <option value="Chuẩn bị" style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>Chuẩn bị</option>
+                  <option value="Đang thực hiện" style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>Đang thực hiện</option>
+                  <option value="Đã hoàn thành" style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>Đã hoàn thành</option>
                 </select>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -163,7 +173,7 @@ export default function TaskDetailModal({ task, onClose }) {
         </div>
 
         {/* Extra Metadata Form */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div className="modal-grid-2">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500', fontSize: '0.875rem' }}>
               <Bookmark size={14} /> Thông tin chi tiết
@@ -180,7 +190,7 @@ export default function TaskDetailModal({ task, onClose }) {
 
         {task.task_type === 'Habit' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem', flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500', fontSize: '0.875rem' }}>
                 <FileText size={16} /> Nhật ký Thói quen
               </label>
@@ -194,16 +204,32 @@ export default function TaskDetailModal({ task, onClose }) {
             </div>
 
             {/* Inline Add Habit Note Form */}
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start', backgroundColor: 'var(--bg-secondary)', padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', width: '130px' }}>
+            <div className="modal-inline-form">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', minWidth: '130px' }}>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Ngày</span>
                 <input type="date" value={newHabitDate} onChange={e => setNewHabitDate(e.target.value)} style={{ padding: '0.4rem', fontSize: '0.75rem', border: '1px solid var(--border-color)', borderRadius: '4px', backgroundColor: 'var(--bg-main)', color: 'var(--text-primary)', outline: 'none' }} />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1, minWidth: '200px' }}>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Nhật ký</span>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <input type="text" placeholder="Ghi chú thêm về công việc này..." value={newHabitContent} onChange={e => setNewHabitContent(e.target.value)} style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', border: '1px solid var(--border-color)', borderRadius: '4px', backgroundColor: 'var(--bg-main)', color: 'var(--text-primary)', outline: 'none' }} />
-                  <button onClick={handleAddHabitNote} className="btn-gold" style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>Thêm</button>
+                  <button 
+                    onClick={handleAddHabitNote} 
+                    className="btn-gold" 
+                    title="Thêm ghi chú"
+                    style={{ 
+                      width: '32px', 
+                      height: '32px', 
+                      borderRadius: '50%', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      padding: 0,
+                      flexShrink: 0 
+                    }}
+                  >
+                    <Plus size={16} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -234,20 +260,36 @@ export default function TaskDetailModal({ task, onClose }) {
             </label>
 
             {/* Inline Add Lesson Form */}
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start', backgroundColor: 'var(--bg-secondary)', padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', width: '120px' }}>
+            <div className="modal-inline-form">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', minWidth: '120px' }}>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Ngày</span>
                 <input type="date" value={newLessonDate} onChange={e => setNewLessonDate(e.target.value)} style={{ padding: '0.4rem', fontSize: '0.75rem', border: '1px solid var(--border-color)', borderRadius: '4px', backgroundColor: 'var(--bg-main)', color: 'var(--text-primary)', outline: 'none' }} />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', width: '70px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', minWidth: '70px' }}>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Bài số</span>
                 <input type="number" placeholder="1, 2..." value={newLessonNumber} onChange={e => setNewLessonNumber(e.target.value)} style={{ padding: '0.4rem', fontSize: '0.75rem', border: '1px solid var(--border-color)', borderRadius: '4px', backgroundColor: 'var(--bg-main)', color: 'var(--text-primary)', outline: 'none' }} />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1, minWidth: '180px' }}>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Nội dung bài</span>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <input type="text" placeholder="Mô tả..." value={newLessonContent} onChange={e => setNewLessonContent(e.target.value)} style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', border: '1px solid var(--border-color)', borderRadius: '4px', backgroundColor: 'var(--bg-main)', color: 'var(--text-primary)', outline: 'none' }} />
-                  <button onClick={handleAddLesson} className="btn-gold" style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>Thêm</button>
+                  <button 
+                    onClick={handleAddLesson} 
+                    className="btn-gold" 
+                    title="Thêm bài học"
+                    style={{ 
+                      width: '32px', 
+                      height: '32px', 
+                      borderRadius: '50%', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      padding: 0,
+                      flexShrink: 0 
+                    }}
+                  >
+                    <Plus size={16} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -273,12 +315,53 @@ export default function TaskDetailModal({ task, onClose }) {
         )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
-          <button onClick={handleDelete} style={{ padding: '0.5rem 1rem', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500', background: 'transparent', border: 'none' }}>
-            <Trash2 size={16} /> Xóa mục này
+          <button 
+            onClick={handleDelete} 
+            title="Xóa mục này"
+            style={{ 
+              width: '38px', 
+              height: '38px', 
+              borderRadius: '50%', 
+              color: 'var(--color-danger)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              background: 'rgba(239, 68, 68, 0.12)', 
+              border: '1px solid rgba(239, 68, 68, 0.3)', 
+              cursor: 'pointer',
+              flexShrink: 0,
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.25)';
+              e.currentTarget.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.3)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            <Trash2 size={18} />
           </button>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <button onClick={onClose} style={{ padding: '0.5rem 1rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Đóng</button>
-            <button onClick={handleSave} className="btn-gold">Lưu thay đổi</button>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <button onClick={onClose} style={{ padding: '0.5rem 1rem', color: 'var(--text-secondary)', fontWeight: '500', background: 'none', border: 'none', cursor: 'pointer' }}>Đóng</button>
+            <button 
+              onClick={handleSave} 
+              className="btn-gold"
+              title="Lưu thay đổi"
+              style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+                flexShrink: 0
+              }}
+            >
+              <Save size={18} />
+            </button>
           </div>
         </div>
 
