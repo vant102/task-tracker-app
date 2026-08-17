@@ -10,8 +10,11 @@ const TYPE_OPTIONS = ['Thiết kế mới', 'Cải tạo', 'Mở rộng', 'Hoàn
 const STATUS_FILTER_OPTIONS = ['Tất cả', 'Đang thực hiện', 'Hoàn thành', 'Tạm dừng'];
 
 export default function ProjectList({ onProjectSelect, onAddProject, selectedCategories = [], searchQuery: externalSearchQuery = '' }) {
-  // Check if running on the legacy link (worklife-vt.web.app)
-  const isLegacyWorklife = typeof window !== 'undefined' && window.location.hostname.includes('worklife-vt');
+  // Check if running on the shared community link (worklife-arch.web.app or worklife-vt.web.app)
+  const isLegacyWorklife = typeof window !== 'undefined' && (
+    window.location.hostname.includes('worklife-arch') || 
+    window.location.hostname.includes('worklife-vt')
+  );
 
   const [subTab, setSubTab] = useState(isLegacyWorklife ? 'all' : 'working'); // 'working' | 'all'
   const [editingProject, setEditingProject] = useState(null);

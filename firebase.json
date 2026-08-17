@@ -51,6 +51,16 @@
           "destination": "/index.html"
         }
       ]
+    },
+    {
+      "site": "worklife-vt",
+      "redirects": [
+        {
+          "source": "**",
+          "destination": "https://worklife-arch.web.app",
+          "type": 301
+        }
+      ]
     }
   ]
 }
