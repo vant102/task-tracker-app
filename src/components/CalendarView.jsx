@@ -21,36 +21,17 @@ const CustomToolbar = (toolbar) => {
     return <span>{date.format('MMMM')} <b>{date.format('YYYY')}</b></span>;
   };
 
-  const btnStyle = (isActive = false) => ({
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: isActive 
-      ? 'linear-gradient(135deg, #e6b965 0%, #b28e41 100%)' 
-      : 'linear-gradient(135deg, rgba(230, 185, 101, 0.18) 0%, rgba(178, 142, 65, 0.25) 100%)',
-    border: `1px solid ${isActive ? '#e6b965' : 'rgba(230, 185, 101, 0.4)'}`,
-    color: isActive ? '#0f172a' : '#e6b965',
-    cursor: 'pointer',
-    flexShrink: 0,
-    boxShadow: isActive ? '0 0 14px rgba(230, 185, 101, 0.5)' : '0 4px 12px rgba(0, 0, 0, 0.25)',
-    transition: 'all 0.2s ease',
-    padding: 0
-  });
-
   return (
     <div className="rbc-toolbar custom-toolbar" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', gap: '0.5rem', position: 'relative', zIndex: 100 }}>
       <div style={{ display: 'flex', gap: '0.6rem' }}>
-        <button onClick={goToBack} title="Trước" style={btnStyle()}>
-          <ChevronLeft size={20} color="#e6b965" />
+        <button type="button" onClick={goToBack} title="Trước">
+          <ChevronLeft size={20} strokeWidth={2.5} />
         </button>
-        <button onClick={goToCurrent} title="Hôm nay" style={btnStyle()}>
-          <CalendarIcon size={18} color="#e6b965" />
+        <button type="button" onClick={goToCurrent} title="Hôm nay">
+          <CalendarIcon size={18} strokeWidth={2.2} />
         </button>
-        <button onClick={goToNext} title="Sau" style={btnStyle()}>
-          <ChevronRight size={20} color="#e6b965" />
+        <button type="button" onClick={goToNext} title="Sau">
+          <ChevronRight size={20} strokeWidth={2.5} />
         </button>
       </div>
       
@@ -59,11 +40,11 @@ const CustomToolbar = (toolbar) => {
       </div>
 
       <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-        <button onClick={() => toolbar.onView('month')} className={toolbar.view === 'month' ? 'rbc-active' : ''} title="Tháng" style={btnStyle(toolbar.view === 'month')}>
-          <LayoutGrid size={18} color={toolbar.view === 'month' ? '#0f172a' : '#e6b965'} />
+        <button type="button" onClick={() => toolbar.onView('month')} className={toolbar.view === 'month' ? 'rbc-active' : ''} title="Tháng">
+          <LayoutGrid size={18} strokeWidth={2.2} />
         </button>
-        <button onClick={() => toolbar.onView('agenda')} className={toolbar.view === 'agenda' ? 'rbc-active' : ''} title="Lịch trình" style={btnStyle(toolbar.view === 'agenda')}>
-          <List size={18} color={toolbar.view === 'agenda' ? '#0f172a' : '#e6b965'} />
+        <button type="button" onClick={() => toolbar.onView('agenda')} className={toolbar.view === 'agenda' ? 'rbc-active' : ''} title="Lịch trình">
+          <List size={18} strokeWidth={2.2} />
         </button>
       </div>
     </div>

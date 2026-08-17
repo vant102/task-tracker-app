@@ -940,3 +940,44 @@ input.glass-input:focus, textarea.glass-input:focus, select.glass-input:focus {
     box-shadow: none !important;
     padding: 0 !important;
 }
+
+/* Calendar Custom Toolbar Buttons */
+.custom-toolbar button {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    background: linear-gradient(135deg, rgba(230, 185, 101, 0.18) 0%, rgba(178, 142, 65, 0.28) 100%) !important;
+    border: 1px solid rgba(230, 185, 101, 0.45) !important;
+    color: #e6b965 !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    transition: all 0.2s ease !important;
+    margin: 0 !important;
+    outline: none !important;
+}
+
+.custom-toolbar button:hover {
+    background: linear-gradient(135deg, rgba(230, 185, 101, 0.35) 0%, rgba(178, 142, 65, 0.45) 100%) !important;
+    border-color: #e6b965 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 0 12px rgba(230, 185, 101, 0.4) !important;
+}
+
+.custom-toolbar button.rbc-active {
+    background: linear-gradient(135deg, #e6b965 0%, #b28e41 100%) !important;
+    color: #0f172a !important;
+    border-color: #e6b965 !important;
+    box-shadow: 0 0 15px rgba(230, 185, 101, 0.6) !important;
+}
+
+.custom-toolbar button svg {
+    display: block !important;
+    width: 20px !important;
+    height: 20px !important;
+    pointer-events: none !important;
+}
+
