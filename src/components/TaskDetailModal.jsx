@@ -343,8 +343,30 @@ export default function TaskDetailModal({ task, onClose }) {
           >
             <Trash2 size={18} />
           </button>
-          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-            <button onClick={onClose} style={{ padding: '0.5rem 1rem', color: 'var(--text-secondary)', fontWeight: '500', background: 'none', border: 'none', cursor: 'pointer' }}>Đóng</button>
+          <div style={{ display: 'flex', gap: '0.85rem', alignItems: 'center' }}>
+            <button 
+              type="button"
+              onClick={onClose} 
+              title="Hủy / Đóng"
+              style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '50%',
+                background: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                color: 'var(--color-danger)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+                padding: 0
+              }}
+              onMouseOver={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.25)'; }}
+              onMouseOut={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)'; }}
+            >
+              <X size={18} />
+            </button>
             <button 
               onClick={handleSave} 
               className="btn-gold"
@@ -353,7 +375,7 @@ export default function TaskDetailModal({ task, onClose }) {
                 width: '38px',
                 height: '38px',
                 borderRadius: '50%',
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 padding: 0,
