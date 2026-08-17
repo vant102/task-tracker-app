@@ -34,51 +34,21 @@ function App() {
       <div className="app-container glass-panel">
         {/* Header - Top Navigation */}
         <header className="header-main">
-          <div className="title-group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <h1 style={{ 
-              background: 'linear-gradient(90deg, var(--color-primary) 35%, #f08967 75%, #ea580c 100%)', 
-              WebkitBackgroundClip: 'text', 
-              WebkitTextFillColor: 'transparent', 
-              display: 'inline-block', 
-              margin: 0,
-              fontSize: '2rem',
-              fontWeight: '800',
-              fontFamily: 'Space Grotesk, sans-serif'
-            }}>WorkLife</h1>
+          <div className="header-top-row">
+            <h1 className="header-brand-title">WorkLife</h1>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div className="header-user-controls">
               {currentUser.photoURL ? (
                 <img 
                   src={currentUser.photoURL} 
                   alt="User Avatar" 
                   title={currentUser.email}
-                  style={{ 
-                    width: '38px', 
-                    height: '38px', 
-                    borderRadius: '50%', 
-                    objectFit: 'cover', 
-                    border: '2px solid rgba(240, 137, 103, 0.8)', 
-                    boxShadow: '0 0 12px rgba(240, 137, 103, 0.4)',
-                    cursor: 'pointer'
-                  }} 
+                  className="header-avatar"
                 />
               ) : (
                 <div 
                   title={currentUser.email}
-                  style={{ 
-                    width: '38px', 
-                    height: '38px', 
-                    borderRadius: '50%', 
-                    background: 'linear-gradient(135deg, #f08967 0%, #ea580c 100%)', 
-                    color: 'white', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    fontWeight: 'bold', 
-                    fontSize: '1rem',
-                    boxShadow: '0 0 12px rgba(240, 137, 103, 0.4)',
-                    cursor: 'pointer'
-                  }}
+                  className="header-avatar-placeholder"
                 >
                   {currentUser.email ? currentUser.email.charAt(0).toUpperCase() : 'U'}
                 </div>
@@ -87,28 +57,7 @@ function App() {
               <button 
                 onClick={logout} 
                 title="Thoát tài khoản"
-                style={{ 
-                  width: '38px', 
-                  height: '38px', 
-                  borderRadius: '50%', 
-                  color: 'var(--color-danger)', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  background: 'rgba(239, 68, 68, 0.12)', 
-                  border: '1px solid rgba(239, 68, 68, 0.25)', 
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.25)';
-                  e.currentTarget.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.3)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
+                className="header-logout-btn"
               >
                 <LogOut size={18} />
               </button>

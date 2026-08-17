@@ -148,8 +148,8 @@ export default function EventModal({ event, defaultDate, onClose, onSave }) {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div className="event-modal-grid">
+            <div className="event-modal-field">
               <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <Calendar size={16} /> Thời gian
               </label>
@@ -158,10 +158,11 @@ export default function EventModal({ event, defaultDate, onClose, onSave }) {
                 className="glass-input" 
                 value={deadline}
                 onChange={e => setDeadline(e.target.value)}
+                style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}
               />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div className="event-modal-field">
               <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <Activity size={16} /> Trạng thái
               </label>
@@ -170,6 +171,9 @@ export default function EventModal({ event, defaultDate, onClose, onSave }) {
                 value={status}
                 onChange={e => setStatus(e.target.value)}
                 style={{ 
+                  width: '100%',
+                  minWidth: 0,
+                  boxSizing: 'border-box',
                   color: (status === 'Tham gia' || status === 'Đã tham gia') ? 'var(--color-success)' : status === 'Lỡ hẹn' ? 'var(--color-danger)' : 'var(--color-warning)',
                   fontWeight: 'bold'
                 }}
@@ -181,8 +185,8 @@ export default function EventModal({ event, defaultDate, onClose, onSave }) {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div className="event-modal-grid">
+            <div className="event-modal-field">
               <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <User size={16} /> Đối tác
               </label>
@@ -192,10 +196,11 @@ export default function EventModal({ event, defaultDate, onClose, onSave }) {
                 value={partner}
                 onChange={e => setPartner(e.target.value)}
                 placeholder="Tên người hẹn..."
+                style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}
               />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div className="event-modal-field">
               <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <MapPin size={16} /> Địa điểm
               </label>
@@ -205,6 +210,7 @@ export default function EventModal({ event, defaultDate, onClose, onSave }) {
                 value={location}
                 onChange={e => setLocation(e.target.value)}
                 placeholder="Địa chỉ..."
+                style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}
               />
             </div>
           </div>
