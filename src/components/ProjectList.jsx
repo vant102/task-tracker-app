@@ -1,21 +1,27 @@
-import React, { useState } from 'react';
-import { deleteProject, useProjects, useTasks } from '../db/db';
-import { Folder, Hash, User, MapPin, Calendar, Plus, CheckCircle2, Clock, Sparkles, Search, Filter, Layers, Building2, Tag, Play, Check, Pause } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { deleteProject, addProject, updateProject, useProjects, useTasks } from '../db/db';
+import { Folder, Hash, User, MapPin, Calendar, Plus, CheckCircle2, Clock, Sparkles, Search, Filter, Layers, Building2, Tag, Play, Check, Pause, RefreshCw, Download, Upload, FileSpreadsheet } from 'lucide-react';
 import ProjectFormModal from './ProjectFormModal';
 import { architecturalProcess } from '../constants/architecturalProcess';
+import * as XLSX from 'xlsx';
 
 const SCOPE_OPTIONS = ['Quy hoạch', 'Kiến trúc', 'Nội thất', 'Cảnh quan'];
 const TYPE_OPTIONS = ['Thiết kế mới', 'Cải tạo', 'Mở rộng', 'Hoàn thiện nội thất'];
 const STATUS_FILTER_OPTIONS = ['Tất cả', 'Đang thực hiện', 'Hoàn thành', 'Tạm dừng'];
 
 export default function ProjectList({ onProjectSelect, onAddProject, selectedCategories = [], searchQuery: externalSearchQuery = '' }) {
-  const [subTab, setSubTab] = useState('working'); // 'working' | 'all'
+  // Check if running on the legacy link (worklife-vt.web.app)
+  const isLegacyWorklife = typeof window !== 'undefined' && window.location.hostname.includes('worklife-vt');
+
+  const [subTab, setSubTab] = useState(isLegacyWorklife ? 'all' : 'working'); // 'working' | 'all'
   const [editingProject, setEditingProject] = useState(null);
   const [searchQuery, setSearchQuery] = useState(externalSearchQuery);
   const [yearQuery, setYearQuery] = useState('');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('Tất cả');
   const [selectedScopeFilter, setSelectedScopeFilter] = useState('Tất cả');
   const [selectedTypeFilter, setSelectedTypeFilter] = useState('Tất cả');
+  const [syncStatus, setSyncStatus] = useState(null);
+  const fileInputRef = useRef(null);
 
   const projects = useProjects() || [];
   const tasks = useTasks() || [];
@@ -31,12 +37,132 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
   const workingCount = projects.filter(p => getProjectStatus(p) === 'Đang thực hiện').length;
   const allCount = projects.length;
 
+  // 2-Way Sync Handler: Web App <-> Excel (Worklife_Sync.xlsx)
+  const handleTwoWaySync = async () => {
+    setSyncStatus('Đang đồng bộ...');
+    try {
+      // 1. Try local server first (if running on PC)
+      const res = await fetch('http://localhost:8081/sync-excel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projects })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setSyncStatus('✅ Đã đồng bộ vào Excel!');
+        setTimeout(() => setSyncStatus(null), 4000);
+        alert(`✅ ĐỒNG BỘ 2 CHIỀU THÀNH CÔNG!\n\nĐã ghi nhận ${projects.length} dự án vào file:\nH:\\My Drive\\Worklife_NVT\\Worklife_Sync.xlsx`);
+        return;
+      }
+    } catch (err) {
+      console.log("Local server offline, fallback to client-side XLSX export:", err);
+    }
+
+    // 2. Fallback: Export Excel directly from browser
+    try {
+      const rows = projects.map(p => {
+        const scopes = Array.isArray(p.scope) ? p.scope.join(', ') : (p.scope || '');
+        const pStatus = getProjectStatus(p);
+        return {
+          "ID": p.project_id_code || p.ID || p.id || '',
+          "Tên Dự Án": p.name || '',
+          "Trạng Thái": pStatus === 'Hoàn thành' ? 'Completed' : (pStatus === 'Tạm dừng' ? 'Paused' : 'Working'),
+          "Phạm Vi": scopes,
+          "Loại Hình": p.project_type || '',
+          "Bắt Đầu": p.start_month || '',
+          "Kết Thúc": p.end_month || '',
+          "Chốt Giai Đoạn": p.phase_deadline || '',
+          "Chủ Đầu Tư": p.client || '',
+          "Địa Điểm": p.location || '',
+          "Phong Cách": p.style || '',
+          "Path": p.local_path || p.Path || '',
+          "IsOnline": true
+        };
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "All_Projects");
+      XLSX.writeFile(workbook, "Worklife_Sync.xlsx");
+
+      setSyncStatus('✅ Đã xuất file Excel!');
+      setTimeout(() => setSyncStatus(null), 4000);
+    } catch (e) {
+      console.error("Lỗi xuất Excel:", e);
+      setSyncStatus('❌ Lỗi xuất file');
+      setTimeout(() => setSyncStatus(null), 4000);
+    }
+  };
+
+  // Import Excel into Cloud Firestore
+  const handleImportExcel = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      setSyncStatus('Đang đọc file Excel...');
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const sheetName = workbook.SheetNames.includes('All_Projects') ? 'All_Projects' : workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const importedRows = XLSX.utils.sheet_to_json(sheet);
+
+      let addedCount = 0;
+      let updatedCount = 0;
+
+      for (const row of importedRows) {
+        const idCode = String(row['ID'] || row['Mã'] || '').trim();
+        const name = String(row['Tên Dự Án'] || row['Ten Du An'] || '').trim();
+        if (!name) continue;
+
+        const scopeRaw = String(row['Phạm Vi'] || row['Phạm vi'] || 'Kiến trúc');
+        const scopes = scopeRaw.split(',').map(s => s.trim()).filter(Boolean);
+
+        const projectData = {
+          name,
+          project_id_code: idCode,
+          status: String(row['Trạng Thái'] || row['Status'] || 'Working').trim(),
+          scope: scopes.length > 0 ? scopes : ['Kiến trúc'],
+          project_type: String(row['Loại Hình'] || row['Type'] || 'Thiết kế mới').trim(),
+          start_month: String(row['Bắt Đầu'] || row['Start'] || '').trim(),
+          end_month: String(row['Kết Thúc'] || row['End'] || '').trim(),
+          phase_deadline: row['Chốt Giai Đoạn'] ? String(row['Chốt Giai Đoạn']).trim() : null,
+          client: String(row['Chủ Đầu Tư'] || row['Client'] || '').trim(),
+          location: String(row['Địa Điểm'] || row['Location'] || '').trim(),
+          style: String(row['Phong Cách'] || row['Style'] || '').trim(),
+          local_path: String(row['Path'] || '').trim(),
+          category: 'Dự án thiết kế',
+          completed: String(row['Trạng Thái']).toLowerCase().includes('complete') || String(row['Trạng Thái']).toLowerCase().includes('hoàn thành'),
+          updatedAt: new Date().toISOString()
+        };
+
+        const existing = projects.find(p => (idCode && p.project_id_code === idCode) || (p.name === name));
+        if (existing) {
+          await updateProject(existing.id, projectData);
+          updatedCount++;
+        } else {
+          await addProject(projectData);
+          addedCount++;
+        }
+      }
+
+      setSyncStatus('✅ Nhập Excel thành công!');
+      setTimeout(() => setSyncStatus(null), 4000);
+      alert(`✅ ĐÃ ĐỒNG BỘ DỮ LIỆU TỪ EXCEL LÊN CLOUD!\n\n- Dự án mới tạo: ${addedCount}\n- Dự án đã cập nhật: ${updatedCount}`);
+    } catch (err) {
+      console.error("Lỗi khi nhập Excel:", err);
+      alert("Lỗi khi đọc file Excel: " + err.message);
+    } finally {
+      e.target.value = '';
+    }
+  };
+
   // Filter projects according to active subTab and multi-dimensional filters
   const filteredProjects = projects.filter(p => {
     const pStatus = getProjectStatus(p);
     
-    // SubTab filter
-    if (subTab === 'working' && pStatus !== 'Đang thực hiện') {
+    // SubTab filter: If on legacy worklife, show all. If on allin-nvt and subTab === 'working', filter working.
+    if (!isLegacyWorklife && subTab === 'working' && pStatus !== 'Đang thực hiện') {
       return false;
     }
 
@@ -55,8 +181,8 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
       if (!matchName && !matchCode && !matchClient && !matchLocation && !matchStyle) return false;
     }
 
-    // Additional filters for All Projects view
-    if (subTab === 'all') {
+    // Additional filters (available when in 'all' subtab or on legacy single-page view)
+    if (subTab === 'all' || isLegacyWorklife) {
       // 1. Year input filter (YYYY e.g. 2012, 2026) matching start_month and end_month range
       if (yearQuery.trim()) {
         const targetYear = parseInt(yearQuery.trim(), 10);
@@ -109,76 +235,84 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
       {/* Top Header & Sub-Tab Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', gap: '1rem', flexWrap: 'wrap' }}>
         
-        {/* Sub-Tabs: Working vs All */}
-        <div style={{ 
-          display: 'inline-flex', 
-          background: 'rgba(15, 23, 42, 0.65)', 
-          padding: '4px', 
-          borderRadius: '12px', 
-          border: '1px solid var(--border-color)',
-          gap: '4px'
-        }}>
-          <button
-            onClick={() => setSubTab('working')}
-            style={{
-              padding: '0.45rem 1.25rem',
-              borderRadius: '8px',
-              fontSize: '0.88rem',
-              fontWeight: subTab === 'working' ? '700' : '500',
-              color: subTab === 'working' ? '#e6b965' : 'var(--text-secondary)',
-              background: subTab === 'working' ? 'linear-gradient(135deg, rgba(230, 185, 101, 0.15) 0%, rgba(178, 142, 65, 0.25) 100%)' : 'transparent',
-              border: subTab === 'working' ? '1px solid rgba(230, 185, 101, 0.35)' : '1px solid transparent',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <Play size={14} fill={subTab === 'working' ? '#e6b965' : 'transparent'} />
-            Working
-            <span style={{ 
-              fontSize: '0.75rem', 
-              background: subTab === 'working' ? 'rgba(230, 185, 101, 0.25)' : 'rgba(255,255,255,0.08)', 
-              padding: '0.1rem 0.45rem', 
-              borderRadius: '10px' 
-            }}>
-              {workingCount}
-            </span>
-          </button>
+        {/* Left Side: Sub-Tabs (Only shown on allin-nvt / new app; hidden on legacy worklife-vt) */}
+        {!isLegacyWorklife ? (
+          <div style={{ 
+            display: 'inline-flex', 
+            background: 'rgba(15, 23, 42, 0.65)', 
+            padding: '4px', 
+            borderRadius: '12px', 
+            border: '1px solid var(--border-color)',
+            gap: '4px'
+          }}>
+            <button
+              onClick={() => setSubTab('working')}
+              style={{
+                padding: '0.45rem 1.25rem',
+                borderRadius: '8px',
+                fontSize: '0.88rem',
+                fontWeight: subTab === 'working' ? '700' : '500',
+                color: subTab === 'working' ? '#e6b965' : 'var(--text-secondary)',
+                background: subTab === 'working' ? 'linear-gradient(135deg, rgba(230, 185, 101, 0.15) 0%, rgba(178, 142, 65, 0.25) 100%)' : 'transparent',
+                border: subTab === 'working' ? '1px solid rgba(230, 185, 101, 0.35)' : '1px solid transparent',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Play size={14} fill={subTab === 'working' ? '#e6b965' : 'transparent'} />
+              Working
+              <span style={{ 
+                fontSize: '0.75rem', 
+                background: subTab === 'working' ? 'rgba(230, 185, 101, 0.25)' : 'rgba(255,255,255,0.08)', 
+                padding: '0.1rem 0.45rem', 
+                borderRadius: '10px' 
+              }}>
+                {workingCount}
+              </span>
+            </button>
 
-          <button
-            onClick={() => setSubTab('all')}
-            style={{
-              padding: '0.45rem 1.25rem',
-              borderRadius: '8px',
-              fontSize: '0.88rem',
-              fontWeight: subTab === 'all' ? '700' : '500',
-              color: subTab === 'all' ? 'var(--color-primary)' : 'var(--text-secondary)',
-              background: subTab === 'all' ? 'rgba(59, 130, 246, 0.18)' : 'transparent',
-              border: subTab === 'all' ? '1px solid rgba(59, 130, 246, 0.35)' : '1px solid transparent',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <Folder size={14} />
-            All
-            <span style={{ 
-              fontSize: '0.75rem', 
-              background: subTab === 'all' ? 'rgba(59, 130, 246, 0.25)' : 'rgba(255,255,255,0.08)', 
-              padding: '0.1rem 0.45rem', 
-              borderRadius: '10px' 
-            }}>
-              {allCount}
-            </span>
-          </button>
-        </div>
+            <button
+              onClick={() => setSubTab('all')}
+              style={{
+                padding: '0.45rem 1.25rem',
+                borderRadius: '8px',
+                fontSize: '0.88rem',
+                fontWeight: subTab === 'all' ? '700' : '500',
+                color: subTab === 'all' ? 'var(--color-primary)' : 'var(--text-secondary)',
+                background: subTab === 'all' ? 'rgba(59, 130, 246, 0.18)' : 'transparent',
+                border: subTab === 'all' ? '1px solid rgba(59, 130, 246, 0.35)' : '1px solid transparent',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Folder size={14} />
+              All
+              <span style={{ 
+                fontSize: '0.75rem', 
+                background: subTab === 'all' ? 'rgba(59, 130, 246, 0.25)' : 'rgba(255,255,255,0.08)', 
+                padding: '0.1rem 0.45rem', 
+                borderRadius: '10px' 
+              }}>
+                {allCount}
+              </span>
+            </button>
+          </div>
+        ) : (
+          <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Folder size={20} color="var(--color-primary)" /> Danh Sách Dự Án ({allCount})
+          </div>
+        )}
 
-        {/* Right Controls: Search & Add Button */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        {/* Right Controls: Search, 2-Way Sync (on allin-nvt), Add Button */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+          
+          {/* Search Box */}
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
@@ -186,12 +320,12 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
             border: '1px solid var(--border-color)', 
             borderRadius: '9999px', 
             padding: '0.3rem 0.85rem',
-            width: '220px'
+            width: '200px'
           }}>
             <Search size={15} color="var(--text-secondary)" style={{ flexShrink: 0 }} />
             <input 
               type="text" 
-              placeholder="Tìm kiếm dự án..." 
+              placeholder="Tìm kiếm..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{ 
@@ -214,6 +348,70 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
             )}
           </div>
 
+          {/* 2-Way Excel Sync Buttons (Active on allin-nvt; Hidden on worklife-vt) */}
+          {!isLegacyWorklife && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                accept=".xlsx,.xls" 
+                style={{ display: 'none' }} 
+                onChange={handleImportExcel} 
+              />
+              
+              <button
+                onClick={handleTwoWaySync}
+                title="Đồng bộ 2 chiều: Ghi nhận danh sách dự án từ Web App vào file Excel Worklife_Sync.xlsx"
+                style={{
+                  padding: '0.45rem 0.85rem',
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                  border: '1px solid rgba(16, 185, 129, 0.35)',
+                  color: '#10b981',
+                  fontSize: '0.82rem',
+                  fontWeight: '600',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap'
+                }}
+                onMouseOver={e => e.currentTarget.style.backgroundColor = 'rgba(16, 185, 129, 0.25)'}
+                onMouseOut={e => e.currentTarget.style.backgroundColor = 'rgba(16, 185, 129, 0.15)'}
+              >
+                <RefreshCw size={14} /> Đồng bộ Excel
+              </button>
+
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                title="Nhập dữ liệu dự án từ file Excel vào Web App"
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--bg-main)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-secondary)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+              >
+                <Upload size={15} />
+              </button>
+            </div>
+          )}
+
+          {syncStatus && (
+            <span style={{ fontSize: '0.78rem', color: '#e6b965', fontWeight: '500' }}>
+              {syncStatus}
+            </span>
+          )}
+
+          {/* Add Project Button */}
           <button
             onClick={onAddProject}
             title="Thêm dự án mới"
@@ -235,8 +433,8 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
         </div>
       </div>
 
-      {/* Filter Bar for "All" view */}
-      {subTab === 'all' && (
+      {/* Filter Bar (Shown on All subtab, or always on legacy worklife-vt) */}
+      {(subTab === 'all' || isLegacyWorklife) && (
         <div style={{ 
           display: 'flex', 
           flexWrap: 'wrap', 
@@ -407,7 +605,7 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
                 </div>
               )}
 
-              {/* Status Indicator Icon (My Progress Board style) replacing old Edit button */}
+              {/* Status Indicator Icon (My Progress Board style) */}
               <div 
                 title={`Trạng thái: ${pStatus}`}
                 style={{
@@ -486,7 +684,7 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
                 </div>
               </div>
 
-              {/* 1.3: Với dự án Đang thực hiện -> Có thêm 2 dòng: Chốt giai đoạn (hàng trên) & Ngày tháng năm + Giờ (hàng dưới) */}
+              {/* 1.3: Với dự án Đang thực hiện -> Có thêm 2 dòng: Chốt giai đoạn & Ngày/Giờ */}
               {pStatus === 'Đang thực hiện' && project.phase_deadline && (
                 <div style={{ 
                   display: 'flex', 
