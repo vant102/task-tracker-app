@@ -1,40 +1,27 @@
 import React, { useState } from 'react';
-import { addTask, updateTask, deleteTask, useProjectTasks } from '../db/db';
-import { Star, Trash2, Plus } from 'lucide-react';
+import { deleteTask, useProjectTasks } from '../db/db';
+import { Star, Trash2, Plus, Edit2 } from 'lucide-react';
 import EventModal from './EventModal';
 
 export default function EntertainmentDashboard({ projectId, project }) {
   const tasks = useProjectTasks(projectId) || [];
   const [showEventModal, setShowEventModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   const handleAddTask = () => {
+    setSelectedEvent(null);
     setShowEventModal(true);
   };
 
-  const handleUpdate = async (id, field, value) => {
-    await updateTask(id, { [field]: value });
+  const handleEditTask = (task) => {
+    setSelectedEvent(task);
+    setShowEventModal(true);
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa sự kiện này?')) {
       await deleteTask(id);
     }
-  };
-
-  const renderStars = (taskId, currentStars) => {
-    return (
-      <div style={{ display: 'flex', gap: '2px', cursor: 'pointer' }}>
-        {[1, 2, 3, 4, 5].map(star => (
-          <Star 
-            key={star} 
-            size={16} 
-            fill={star <= currentStars ? 'var(--color-warning)' : 'transparent'} 
-            color={star <= currentStars ? 'var(--color-warning)' : 'var(--text-secondary)'} 
-            onClick={() => handleUpdate(taskId, 'priority_star', star)}
-          />
-        ))}
-      </div>
-    );
   };
 
   return (
@@ -65,85 +52,121 @@ export default function EntertainmentDashboard({ projectId, project }) {
         <div style={{ overflowX: 'auto', margin: '0 -1.25rem' }}>
           <table style={{ width: '100%', minWidth: '1250px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem', tableLayout: 'fixed' }}>
             <colgroup>
-              <col style={{ width: '90px' }} />
-            <col style={{ width: '250px' }} />
-            <col style={{ width: '160px' }} />
-            <col style={{ width: '160px' }} />
-            <col style={{ width: '120px' }} />
-            <col style={{ width: '180px' }} />
-            <col style={{ width: '160px' }} />
-            <col style={{ width: '60px' }} />
-          </colgroup>
-          <thead>
-            <tr style={{ backgroundColor: 'var(--bg-main)', color: 'var(--text-secondary)' }}>
-              <th style={{ padding: '0.5rem 0.5rem 0.5rem 1.25rem', position: 'sticky', left: 0, zIndex: 10, backgroundColor: 'rgba(20, 25, 40, 1)', borderRight: '1px solid var(--border-color)' }}>Sự kiện</th>
-              <th style={{ padding: '1rem' }}>Thời gian</th>
-              <th style={{ padding: '1rem' }}>Đối tác</th>
-              <th style={{ padding: '1rem' }}>Địa điểm</th>
-              <th style={{ padding: '1rem', width: '100px' }}>Ưu tiên</th>
-              <th style={{ padding: '1rem' }}>Ghi chú</th>
-              <th style={{ padding: '1rem', width: '160px' }}>Trạng thái</th>
-              <th style={{ padding: '1rem', width: '60px', textAlign: 'center' }}>Xóa</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tasks?.map(task => (
-              <tr key={task.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background-color 0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--bg-main)'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                <td style={{ padding: '0.5rem 0.5rem 0.5rem 1.25rem', verticalAlign: 'top', position: 'sticky', left: 0, zIndex: 2, backgroundColor: 'rgba(20, 25, 40, 1)', borderRight: '1px solid var(--border-color)' }}>
-                  <textarea defaultValue={task.title} onBlur={e => handleUpdate(task.id, 'title', e.target.value)} onInput={e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }} style={{ width: '100%', backgroundColor: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', fontWeight: '500', resize: 'none', overflow: 'hidden', minHeight: '3.2em', lineHeight: '1.5', padding: 0 }} />
-                </td>
-                <td style={{ padding: '1rem', verticalAlign: 'top' }}>
-                  <input type="datetime-local" defaultValue={task.deadline ? new Date(task.deadline).toISOString().slice(0,16) : ''} onChange={e => handleUpdate(task.id, 'deadline', new Date(e.target.value).toISOString())} style={{ width: '100%', boxSizing: 'border-box', backgroundColor: 'transparent', border: '1px solid var(--border-color)', borderRadius: '4px', outline: 'none', color: 'var(--text-secondary)', padding: '0.25rem', fontFamily: 'inherit' }} />
-                </td>
-                <td style={{ padding: '1rem', verticalAlign: 'top' }}>
-                  <textarea defaultValue={task.partner || ''} onBlur={e => handleUpdate(task.id, 'partner', e.target.value)} onInput={e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }} placeholder="Tên người hẹn..." style={{ width: '100%', backgroundColor: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', resize: 'none', overflow: 'hidden', minHeight: '3.2em', lineHeight: '1.5' }} />
-                </td>
-                <td style={{ padding: '1rem', verticalAlign: 'top' }}>
-                  <textarea defaultValue={task.location || ''} onBlur={e => handleUpdate(task.id, 'location', e.target.value)} onInput={e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }} placeholder="Địa chỉ..." style={{ width: '100%', backgroundColor: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', resize: 'none', overflow: 'hidden', minHeight: '3.2em', lineHeight: '1.5' }} />
-                </td>
-                <td style={{ padding: '1rem', verticalAlign: 'top' }}>
-                  {renderStars(task.id, task.priority_star || 1)}
-                </td>
-                <td style={{ padding: '1rem', verticalAlign: 'top' }}>
-                  <textarea defaultValue={task.notes || ''} onBlur={e => handleUpdate(task.id, 'notes', e.target.value)} onInput={e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }} placeholder="Ghi chú thêm..." style={{ width: '100%', backgroundColor: 'transparent', border: 'none', outline: 'none', color: 'var(--text-secondary)', resize: 'none', overflow: 'hidden', minHeight: '3.2em', lineHeight: '1.5' }} />
-                </td>
-                <td style={{ padding: '1rem', verticalAlign: 'top' }}>
-                  <select 
-                    value={task.status === 'Đã tham gia' ? 'Tham gia' : (task.status || 'Sắp tới')} 
-                    onChange={e => handleUpdate(task.id, 'status', e.target.value)}
-                    style={{ 
-                      width: '100%', padding: '0.4rem 0.5rem', borderRadius: '4px', outline: 'none', border: 'none', fontWeight: '500',
-                      backgroundColor: (task.status === 'Tham gia' || task.status === 'Đã tham gia') ? 'rgba(16, 185, 129, 0.2)' : task.status === 'Lỡ hẹn' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                      color: (task.status === 'Tham gia' || task.status === 'Đã tham gia') ? 'var(--color-success)' : task.status === 'Lỡ hẹn' ? 'var(--color-danger)' : 'var(--color-warning)',
-                      fontFamily: 'inherit'
-                    }}
-                  >
-                    <option value="Sắp tới">Sắp tới</option>
-                    <option value="Tham gia">Tham gia</option>
-                    <option value="Lỡ hẹn">Lỡ hẹn</option>
-                  </select>
-                </td>
-                <td style={{ padding: '1rem', textAlign: 'center', verticalAlign: 'top' }}>
-                  <button onClick={() => handleDelete(task.id)} style={{ color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '0.2rem' }} onMouseOver={e => e.currentTarget.style.color = 'var(--color-danger)'} onMouseOut={e => e.currentTarget.style.color = 'var(--text-secondary)'}>
-                    <Trash2 size={16} />
-                  </button>
-                </td>
+              <col style={{ width: '180px' }} />
+              <col style={{ width: '180px' }} />
+              <col style={{ width: '160px' }} />
+              <col style={{ width: '180px' }} />
+              <col style={{ width: '120px' }} />
+              <col style={{ width: '220px' }} />
+              <col style={{ width: '140px' }} />
+              <col style={{ width: '60px' }} />
+            </colgroup>
+            <thead>
+              <tr style={{ backgroundColor: 'var(--bg-main)', color: 'var(--text-secondary)' }}>
+                <th style={{ padding: '0.75rem 0.75rem 0.75rem 1.25rem', position: 'sticky', left: 0, zIndex: 10, backgroundColor: 'rgba(20, 25, 40, 1)', borderRight: '1px solid var(--border-color)' }}>Sự kiện</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Thời gian</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Đối tác</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Địa điểm</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Ưu tiên</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Ghi chú</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Trạng thái</th>
+                <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>Xóa</th>
               </tr>
-            ))}
-            {(!tasks || tasks.length === 0) && (
-              <tr>
-                <td colSpan="8" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Chưa có sự kiện giải trí nào. Bấm "Thêm sự kiện" để bắt đầu.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {tasks?.map(task => (
+                <tr key={task.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background-color 0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--bg-main)'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                  <td style={{ padding: '0.75rem 0.75rem 0.75rem 1.25rem', verticalAlign: 'top', position: 'sticky', left: 0, zIndex: 2, backgroundColor: 'rgba(20, 25, 40, 1)', borderRight: '1px solid var(--border-color)' }}>
+                    <div 
+                      onClick={() => handleEditTask(task)}
+                      style={{ fontWeight: '600', color: 'var(--color-primary)', fontSize: '0.92rem', wordBreak: 'break-word', cursor: 'pointer', marginBottom: '0.4rem' }}
+                      title="Click để chỉnh sửa"
+                    >
+                      {task.title}
+                    </div>
+                    <button 
+                      onClick={() => handleEditTask(task)}
+                      title="Chỉnh sửa chi tiết"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '500',
+                        color: 'var(--color-gold)',
+                        background: 'rgba(230, 185, 101, 0.12)',
+                        border: '1px solid rgba(230, 185, 101, 0.3)',
+                        padding: '0.25rem 0.6rem',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseOver={e => e.currentTarget.style.background = 'rgba(230, 185, 101, 0.25)'}
+                      onMouseOut={e => e.currentTarget.style.background = 'rgba(230, 185, 101, 0.12)'}
+                    >
+                      <Edit2 size={12} /> Sửa
+                    </button>
+                  </td>
+                  <td style={{ padding: '0.75rem 1rem', verticalAlign: 'top', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    {task.deadline ? new Date(task.deadline).toLocaleString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '---'}
+                  </td>
+                  <td style={{ padding: '0.75rem 1rem', verticalAlign: 'top', fontSize: '0.85rem' }}>
+                    {task.partner || <span style={{ opacity: 0.4 }}>---</span>}
+                  </td>
+                  <td style={{ padding: '0.75rem 1rem', verticalAlign: 'top', fontSize: '0.85rem' }}>
+                    {task.location || <span style={{ opacity: 0.4 }}>---</span>}
+                  </td>
+                  <td style={{ padding: '0.75rem 1rem', verticalAlign: 'top' }}>
+                    <div style={{ display: 'flex', gap: '3px' }}>
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <Star 
+                          key={star} 
+                          size={15} 
+                          fill={star <= (task.priority_star || 1) ? 'var(--color-warning)' : 'transparent'} 
+                          color={star <= (task.priority_star || 1) ? 'var(--color-warning)' : 'var(--text-secondary)'} 
+                        />
+                      ))}
+                    </div>
+                  </td>
+                  <td style={{ padding: '0.75rem 1rem', verticalAlign: 'top', fontSize: '0.85rem', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                    {task.notes || <span style={{ opacity: 0.4 }}>---</span>}
+                  </td>
+                  <td style={{ padding: '0.75rem 1rem', verticalAlign: 'top' }}>
+                    <span 
+                      className="badge-pill"
+                      style={{
+                        backgroundColor: (task.status === 'Tham gia' || task.status === 'Đã tham gia') ? 'rgba(16, 185, 129, 0.18)' : task.status === 'Lỡ hẹn' ? 'rgba(239, 68, 68, 0.18)' : 'rgba(245, 158, 11, 0.18)',
+                        color: (task.status === 'Tham gia' || task.status === 'Đã tham gia') ? 'var(--color-success)' : task.status === 'Lỡ hẹn' ? 'var(--color-danger)' : 'var(--color-warning)',
+                        border: `1px solid ${(task.status === 'Tham gia' || task.status === 'Đã tham gia') ? 'rgba(16, 185, 129, 0.35)' : task.status === 'Lỡ hẹn' ? 'rgba(239, 68, 68, 0.35)' : 'rgba(245, 158, 11, 0.35)'}`
+                      }}
+                    >
+                      {task.status || 'Sắp tới'}
+                    </span>
+                  </td>
+                  <td style={{ padding: '0.75rem 1rem', textAlign: 'center', verticalAlign: 'top' }}>
+                    <button onClick={() => handleDelete(task.id)} title="Xóa sự kiện" style={{ color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '0.25rem' }} onMouseOver={e => e.currentTarget.style.color = 'var(--color-danger)'} onMouseOut={e => e.currentTarget.style.color = 'var(--text-secondary)'}>
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {(!tasks || tasks.length === 0) && (
+                <tr>
+                  <td colSpan="8" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Chưa có sự kiện giải trí nào. Bấm "Thêm sự kiện" để bắt đầu.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
       
       {showEventModal && (
         <EventModal 
-          event={null}
-          onClose={() => setShowEventModal(false)}
+          event={selectedEvent}
+          onClose={() => {
+            setShowEventModal(false);
+            setSelectedEvent(null);
+          }}
         />
       )}
     </div>

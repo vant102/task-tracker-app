@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "task-manager-app-578f5"
-  }
+  },
+  "targets": {
+    "task-manager-app-578f5": {
+      "hosting": {
+        "worklife": [
+          "worklife-vt"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
