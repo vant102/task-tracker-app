@@ -7,9 +7,11 @@
       "hosting": {
         "worklife": [
           "worklife-vt"
+        ],
+        "allin": [
+          "allin-nvt"
         ]
       }
     }
-  },
-  "etags": {}
+  }
 }
