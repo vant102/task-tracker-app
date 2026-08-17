@@ -51,16 +51,6 @@
           "destination": "/index.html"
         }
       ]
-    },
-    {
-      "site": "task-manager-app-578f5",
-      "redirects": [
-        {
-          "source": "**",
-          "destination": "https://worklife-vt.web.app",
-          "type": 301
-        }
-      ]
     }
   ]
 }
