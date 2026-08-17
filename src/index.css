@@ -913,22 +913,33 @@ input.glass-input:focus, textarea.glass-input:focus, select.glass-input:focus {
     border-right: none !important;
 }
 
-/* Đồng bộ toàn bộ chữ trong bảng Lịch trình (cỡ chữ và màu) */
+/* Đồng bộ toàn bộ chữ trong bảng Lịch trình (chữ trắng tương phản cao dễ đọc) */
 .rbc-agenda-view table.rbc-agenda-table td,
 .rbc-agenda-view table.rbc-agenda-table td.rbc-agenda-time-cell,
 .rbc-agenda-view table.rbc-agenda-table td.rbc-agenda-event-cell,
 .rbc-agenda-view table.rbc-agenda-table .rbc-agenda-event-cell * {
     font-size: 1rem !important;
     font-weight: 500 !important;
-    color: var(--color-primary) !important; /* Chuyển toàn bộ text thành màu xanh */
-    text-shadow: none !important;
+    color: #ffffff !important; /* Chuyển toàn bộ text thành màu trắng dễ đọc */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
     font-family: inherit !important;
     line-height: 1.5 !important;
 }
 
-/* Row background: màu vàng chuyển */
+/* Row background: màu nền xanh như nền chung của app */
 .rbc-agenda-view table.rbc-agenda-table tbody > tr {
-    background: linear-gradient(135deg, #fdf6dc 0%, #dec281 50%, #b28e41 100%) !important;
+    background: rgba(15, 23, 42, 0.65) !important;
+    transition: background-color 0.2s ease !important;
+}
+
+.rbc-agenda-view table.rbc-agenda-table tbody > tr:hover {
+    background: rgba(30, 41, 59, 0.85) !important;
+}
+
+.rbc-agenda-view table.rbc-agenda-table tbody > tr > td {
+    border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    vertical-align: middle !important;
 }
 
 /* Xóa bo góc và nền của thẻ event do eventStyleGetter gây ra (dự phòng) */

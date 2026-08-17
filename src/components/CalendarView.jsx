@@ -4,9 +4,8 @@ import { Calendar, momentLocalizer, Views } from 'react-big-calendar';
 import moment from 'moment';
 import 'moment/locale/vi';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import { Calendar as CalendarIcon, Clock, Sparkles, AlertCircle, ChevronLeft, ChevronRight, LayoutGrid, List } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, LayoutGrid, List } from 'lucide-react';
 import '../index.css';
-import EventModal from './EventModal';
 
 moment.locale('vi');
 const localizer = momentLocalizer(moment);
@@ -54,9 +53,6 @@ const CustomToolbar = (toolbar) => {
 export default function CalendarView() {
   const tasks = useTasks() || [];
   const projects = useProjects() || [];
-  const [showEventModal, setShowEventModal] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentView, setCurrentView] = useState('month');
 
@@ -92,9 +88,6 @@ export default function CalendarView() {
     });
 
   const events = [...taskEvents, ...projectEvents];
-
-  // Today's events count
-  const todayEvents = events.filter(e => moment(e.start).isSame(moment(), 'day'));
 
   const eventStyleGetter = (event, start, end, isSelected) => {
     if (currentView === 'agenda') return {};
@@ -137,38 +130,14 @@ export default function CalendarView() {
         boxShadow: '0 3px 8px rgba(0,0,0,0.25)',
         textShadow,
         textAlign: 'center',
-        fontSize: '0.82rem'
+        fontSize: '0.82rem',
+        cursor: 'default'
       }
     };
   };
 
-  const handleSelectSlot = (slotInfo) => {
-    setSelectedEvent(null);
-    setSelectedDate(slotInfo.start);
-    setShowEventModal(true);
-  };
-
-  const handleSelectEvent = (event) => {
-    // Chỉ cho phép sửa nếu đó là task (sự kiện), không cho sửa phase của project trực tiếp ở đây
-    if (event.type === 'task') {
-      const fullTask = tasks.find(t => t.id === event.id);
-      setSelectedEvent(fullTask);
-      setSelectedDate(null);
-      setShowEventModal(true);
-    }
-  };
-
-  const handleDrillDown = (date, view) => {
-    setSelectedEvent(null);
-    setSelectedDate(date);
-    setShowEventModal(true);
-  };
-
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      
-
-
       {/* Main Calendar Bento Panel */}
       <div className="card" style={{ height: '70vh', padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
         <Calendar
@@ -188,11 +157,7 @@ export default function CalendarView() {
           endAccessor="end"
           style={{ height: '100%' }}
           eventPropGetter={eventStyleGetter}
-          selectable={true}
-          longPressThreshold={10}
-          onSelectSlot={handleSelectSlot}
-          onSelectEvent={handleSelectEvent}
-          onDrillDown={handleDrillDown}
+          selectable={false}
           components={{
             toolbar: CustomToolbar,
             agenda: {
@@ -206,14 +171,6 @@ export default function CalendarView() {
           }}
         />
       </div>
-
-      {showEventModal && (
-        <EventModal 
-          event={selectedEvent}
-          defaultDate={selectedDate}
-          onClose={() => setShowEventModal(false)}
-        />
-      )}
     </div>
   );
 }
