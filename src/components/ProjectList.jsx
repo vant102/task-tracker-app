@@ -486,7 +486,7 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
                 </div>
               </div>
 
-              {/* 1.3: Với dự án Đang thực hiện -> Có thêm 2 dòng: Chốt giai đoạn (hàng trên) & Ngày tháng năm (hàng dưới) */}
+              {/* 1.3: Với dự án Đang thực hiện -> Có thêm 2 dòng: Chốt giai đoạn (hàng trên) & Ngày tháng năm + Giờ (hàng dưới) */}
               {pStatus === 'Đang thực hiện' && project.phase_deadline && (
                 <div style={{ 
                   display: 'flex', 
@@ -502,7 +502,20 @@ export default function ProjectList({ onProjectSelect, onAddProject, selectedCat
                     Chốt giai đoạn:
                   </span>
                   <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700' }}>
-                    {new Date(project.phase_deadline).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                    {(() => {
+                      try {
+                        const d = new Date(project.phase_deadline);
+                        const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                        const hh = String(d.getHours()).padStart(2, '0');
+                        const min = String(d.getMinutes()).padStart(2, '0');
+                        if (hh !== '00' || min !== '00') {
+                          return `${dateStr} • ${hh}:${min}`;
+                        }
+                        return dateStr;
+                      } catch (e) {
+                        return project.phase_deadline;
+                      }
+                    })()}
                   </span>
                 </div>
               )}

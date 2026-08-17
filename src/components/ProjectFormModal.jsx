@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Image as ImageIcon, Check, Folder, Calendar, Layers, Building2, MapPin, User, Tag, Save, Activity } from 'lucide-react';
+import { X, Image as ImageIcon, Check, Folder, Calendar, Layers, Building2, MapPin, User, Tag, Save, Activity, Clock } from 'lucide-react';
 import { addProject, updateProject } from '../db/db';
 
 const SCOPE_OPTIONS = ['Quy hoạch', 'Kiến trúc', 'Nội thất', 'Cảnh quan'];
@@ -18,7 +18,8 @@ export default function ProjectFormModal({ onClose, editProject = null }) {
   const [projectType, setProjectType] = useState('Thiết kế mới');
   const [startMonth, setStartMonth] = useState('');
   const [endMonth, setEndMonth] = useState('');
-  const [phaseDeadline, setPhaseDeadline] = useState('');
+  const [phaseDate, setPhaseDate] = useState('');
+  const [phaseTime, setPhaseTime] = useState('');
   const [client, setClient] = useState('');
   const [location, setLocation] = useState('');
   const [style, setStyle] = useState('');
@@ -35,7 +36,37 @@ export default function ProjectFormModal({ onClose, editProject = null }) {
       setProjectType(editProject.project_type || 'Thiết kế mới');
       setStartMonth(editProject.start_month || '');
       setEndMonth(editProject.end_month || '');
-      setPhaseDeadline(editProject.phase_deadline ? editProject.phase_deadline.slice(0, 10) : '');
+      
+      // Parse phase_deadline into Date and Time
+      if (editProject.phase_deadline) {
+        try {
+          const d = new Date(editProject.phase_deadline);
+          if (!isNaN(d.getTime())) {
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            setPhaseDate(`${yyyy}-${mm}-${dd}`);
+            
+            const hh = String(d.getHours()).padStart(2, '0');
+            const min = String(d.getMinutes()).padStart(2, '0');
+            if (hh !== '00' || min !== '00') {
+              setPhaseTime(`${hh}:${min}`);
+            } else {
+              setPhaseTime('');
+            }
+          } else {
+            setPhaseDate(editProject.phase_deadline.slice(0, 10));
+            setPhaseTime('');
+          }
+        } catch (e) {
+          setPhaseDate('');
+          setPhaseTime('');
+        }
+      } else {
+        setPhaseDate('');
+        setPhaseTime('');
+      }
+
       setClient(editProject.client || '');
       setLocation(editProject.location || '');
       setStyle(editProject.style || '');
@@ -82,6 +113,16 @@ export default function ProjectFormModal({ onClose, editProject = null }) {
       return;
     }
 
+    // Combine phaseDate and phaseTime into ISO string / timestamp
+    let combinedDeadline = null;
+    if (phaseDate) {
+      if (phaseTime) {
+        combinedDeadline = `${phaseDate}T${phaseTime}:00`;
+      } else {
+        combinedDeadline = `${phaseDate}T00:00:00`;
+      }
+    }
+
     const data = {
       name,
       category,
@@ -91,7 +132,7 @@ export default function ProjectFormModal({ onClose, editProject = null }) {
       project_type: projectType,
       start_month: startMonth,
       end_month: endMonth,
-      phase_deadline: phaseDeadline || null,
+      phase_deadline: combinedDeadline,
       client,
       location,
       style,
@@ -360,10 +401,10 @@ export default function ProjectFormModal({ onClose, editProject = null }) {
               </div>
             </div>
 
-            {/* 6. Tháng bắt đầu (1 hàng riêng) */}
+            {/* 6. Bắt đầu (Đổi từ Tháng bắt đầu, 1 hàng riêng) */}
             <div className="form-group-row">
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.45rem', color: 'var(--text-secondary)', fontSize: '0.88rem', fontWeight: '600' }}>
-                <Calendar size={16} /> Tháng bắt đầu (Tháng/Năm)
+                <Calendar size={16} /> Bắt đầu (Tháng/Năm)
               </label>
               <input 
                 type="month" 
@@ -374,10 +415,10 @@ export default function ProjectFormModal({ onClose, editProject = null }) {
               />
             </div>
 
-            {/* 7. Tháng kết thúc (1 hàng riêng) */}
+            {/* 7. Kết thúc (Đổi từ Tháng kết thúc, 1 hàng riêng) */}
             <div className="form-group-row">
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.45rem', color: 'var(--text-secondary)', fontSize: '0.88rem', fontWeight: '600' }}>
-                <Calendar size={16} /> Tháng kết thúc (Tháng/Năm)
+                <Calendar size={16} /> Kết thúc (Tháng/Năm)
               </label>
               <input 
                 type="month" 
@@ -388,18 +429,39 @@ export default function ProjectFormModal({ onClose, editProject = null }) {
               />
             </div>
 
-            {/* 8. Chốt giai đoạn (1 hàng riêng - Dành cho dự án đang thực hiện) */}
+            {/* 8. Chốt giai đoạn (Tách thành 2 hàng: Hàng 1 Ngày, Hàng 2 Giờ) */}
             <div className="form-group-row">
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.45rem', color: 'var(--text-secondary)', fontSize: '0.88rem', fontWeight: '600' }}>
-                <Calendar size={16} /> Chốt giai đoạn (Hạn chót ngày/tháng/năm)
+                <Calendar size={16} /> Chốt giai đoạn
               </label>
-              <input 
-                type="date" 
-                value={phaseDeadline} 
-                onChange={e => setPhaseDeadline(e.target.value)} 
-                className="glass-input" 
-                style={{ width: '100%', boxSizing: 'border-box' }} 
-              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                {/* Hàng 1: Chọn Ngày */}
+                <div>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', display: 'block' }}>
+                    Ngày chốt (Ngày/Tháng/Năm):
+                  </span>
+                  <input 
+                    type="date" 
+                    value={phaseDate} 
+                    onChange={e => setPhaseDate(e.target.value)} 
+                    className="glass-input" 
+                    style={{ width: '100%', boxSizing: 'border-box' }} 
+                  />
+                </div>
+                {/* Hàng 2: Chọn Giờ */}
+                <div>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <Clock size={13} /> Giờ chốt (Giờ:Phút):
+                  </span>
+                  <input 
+                    type="time" 
+                    value={phaseTime} 
+                    onChange={e => setPhaseTime(e.target.value)} 
+                    className="glass-input" 
+                    style={{ width: '100%', boxSizing: 'border-box' }} 
+                  />
+                </div>
+              </div>
             </div>
 
             {/* 9. Chủ đầu tư (1 hàng riêng) */}
